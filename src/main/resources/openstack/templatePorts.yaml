@@ -1,0 +1,27 @@
+heat_template_version: 2015-10-15
+description: Deployment Description for Ports for ReddisMQ
+parameters:
+  network_id:
+    type: string
+    description: Network used by the server
+  port_number:
+    type: number
+    description: number of secondaries for replica set
+resources:
+  sec_ports:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: port_number }
+      resource_def:
+        type: OS::Neutron::Port
+        properties:
+          network_id: {get_param: network_id}
+          security_groups:
+            - all
+outputs:
+  port_ips:
+    value: {get_attr: [sec_ports, fixed_ips, 0, ip_address]}
+    description: all ips of ips in the port group
+  port_ports:
+    value: {get_attr: [sec_ports, refs]}
+    description: IDs of ports
