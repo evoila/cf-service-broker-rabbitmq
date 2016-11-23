@@ -21,6 +21,7 @@ import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
 @Primary
 public class RabbitMqIpAccessor extends CustomIpAccessor {
 
+	@SuppressWarnings("unused")
 	private HeatFluent heatFluent;
 
 	@Autowired

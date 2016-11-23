@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -71,7 +72,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private RabbitMqService connection(ServiceInstance serviceInstance, String vhostName, String userName,
-			String password) throws IOException {
+			String password) throws IOException, TimeoutException {
 		ServerAddress host = serviceInstance.getHosts().get(0);
 		log.info("Opening connection to " + host.getIp() + host.getPort());
 		RabbitMqService rabbitMqService = new RabbitMqService();
@@ -120,7 +121,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 		try {
 			connection(serviceInstance, vhostName, userName, password);
-		} catch (IOException e) {
+		} catch (IOException | TimeoutException e) {
 			throw new ServiceBrokerException("Could not open RabbitMQ connection", e);
 		}
 

@@ -4,6 +4,7 @@
 package de.evoila.cf.broker.custom.rabbitmq;
 
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -27,7 +28,7 @@ public class RabbitMqService {
 	}
 
 	public void createConnection(String id, String host, int port, String vhostName, String userName, String password)
-			throws IOException {
+			throws IOException, TimeoutException {
 		ConnectionFactory connectionFactory = new ConnectionFactory();
 		connectionFactory.setHost(host);
 		connectionFactory.setPort(port);
