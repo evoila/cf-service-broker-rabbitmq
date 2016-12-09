@@ -1,33 +1,14 @@
 package de.evoila.cf.cpi.openstack.custom;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Repository;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-import de.evoila.cf.broker.persistence.repository.CrudRepositoryImpl;
 
 /**
  * @author Christian Brinker, evoila.
  *
  */
-@Repository
-public class StackMappingRepository extends CrudRepositoryImpl<StackMapping, String> {
-
-	@Autowired
-	@Qualifier("jacksonStackMappingRedisTemplate")
-	private RedisTemplate<String, StackMapping> redisTemplate;
-
-	@Override
-	protected RedisTemplate<String, StackMapping> getRedisTemplate() {
-		return this.redisTemplate;
-	}
-
-	private static final String PREFIX = "stackmapping-";
-
-	@Override
-	protected String getPrefix() {
-		return PREFIX;
-	}
+@ConditionalOnProperty(prefix = "openstack", name = { "log_host", "log_port"}, havingValue = "")
+public interface StackMappingRepository extends MongoRepository<StackMapping, String> {
 
 }

@@ -16,6 +16,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.Plan;
@@ -70,13 +72,16 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 			+ CREDENTIAL_IP_SEPARATOR + STRING_URL_VALUE + IP_PORT_SEPARATOR + DOUBLE_URL_VALUE;
 
 	private Logger log = LoggerFactory.getLogger(getClass());
+	
+	@Autowired
+	private RabbitMqCustomImplementation rabbitMqCustomImplementation;
 
 	private RabbitMqService connection(ServiceInstance serviceInstance, String vhostName, String userName,
 			String password) throws IOException, TimeoutException {
 		ServerAddress host = serviceInstance.getHosts().get(0);
 		log.info("Opening connection to " + host.getIp() + host.getPort());
 		RabbitMqService rabbitMqService = new RabbitMqService();
-		rabbitMqService.createConnection(serviceInstance.getId(), host.getIp(), host.getPort(), vhostName, userName,
+		rabbitMqService.createConnection(host.getIp(), host.getPort(), vhostName, userName,
 				password);
 		return rabbitMqService;
 	}

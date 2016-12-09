@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.exception.PlatformException;
@@ -21,6 +22,7 @@ import de.evoila.cf.broker.model.ServerAddress;
  *
  */
 @Service
+@ConditionalOnProperty(prefix = "openstack", name = { "log_host", "log_port"}, havingValue = "")
 public class RabbitMQCustomStackHandler extends CustomStackHandler {
 	private final Logger log = LoggerFactory.getLogger(RabbitMQCustomStackHandler.class);
 

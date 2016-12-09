@@ -6,6 +6,7 @@ package de.evoila.cf.cpi.openstack.custom;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
  */
 @Service
 @Primary
+@ConditionalOnProperty(prefix = "openstack", name = { "log_host", "log_port"}, havingValue = "")
 public class RabbitMqIpAccessor extends CustomIpAccessor {
 
 	@SuppressWarnings("unused")
