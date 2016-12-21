@@ -3,14 +3,19 @@
  */
 package de.evoila.cf.broker.custom;
 
+import java.util.List;
+
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Lists;
+
 //import de.evoila.cf.broker.custom.mongodb.MongoDbService;
 import de.evoila.cf.broker.exception.PlatformException;
+import de.evoila.cf.broker.model.ServerAddress;
 import de.evoila.cf.cpi.existing.CustomExistingService;
 import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
 import de.evoila.cf.cpi.existing.ExistingServiceFactory;
@@ -60,6 +65,13 @@ public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 		if (connection instanceof RabbitMqService)
 			createVHost((RabbitMqService) connection, instanceId);
 
+	}
+	
+	@Override
+	protected List<ServerAddress> getExistingServiceHosts() {
+		ServerAddress serverAddress = new ServerAddress("default", super.getHost(), super.getPort());
+		ServerAddress serverApiAdress = new ServerAddress("user", super.getHost(), adminPort);
+		return Lists.newArrayList(serverAddress, serverApiAdress);
 	}
 
 	public int getAdminPort() {

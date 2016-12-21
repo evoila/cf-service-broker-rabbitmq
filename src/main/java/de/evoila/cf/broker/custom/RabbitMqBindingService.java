@@ -17,6 +17,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -73,6 +74,12 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 	
+	@Value("${existing.endpoint.username:}")
+	private String username;
+	
+	@Value("${existing.endpoint.password:}")
+	private String password;
+	
 	@Autowired
 	private RabbitMqCustomImplementation rabbitMqCustomImplementation;
 
@@ -99,6 +106,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		}
 
 		if (amqpHost == null) {
+			log.debug(hosts.toString());
 			throw new ServiceBrokerException("No valid default port was provided");
 		}
 
@@ -115,9 +123,12 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 		String apiHostAddress = apiHost.getIp();
 		int apiPort = apiHost.getPort();
+		
+		String adminUsername = getAdminUser(serviceInstance);
+		String adminPassword = getAdminPassword(serviceInstance);
 
-		addUserToVHostAndSetPermissions(serviceInstance.getId(), userName, apiHostAddress, apiPort, password,
-				vhostName);
+		rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(adminUsername, adminPassword, userName, password, apiHostAddress, apiPort,
+				vhostName );
 
 		String rabbitMqUrl = String.format(URL_PATTERN, userName, password, amqpHostAddress, amqpHost.getPort(),
 				vhostName);
@@ -134,6 +145,14 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		credentials.put("uri", rabbitMqUrl);
 		credentials.put("api_uri", apiUrl);
 		return credentials;
+	}
+
+	private String getAdminPassword(ServiceInstance serviceInstance) {
+		return (this.password == null || this.password.equals("")) ? serviceInstance.getId() : this.password;
+	}
+
+	private String getAdminUser(ServiceInstance serviceInstance) {
+		return (this.username == null || this.username.equals("")) ? serviceInstance.getId() : this.username;
 	}
 
 	/*
@@ -178,15 +197,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		return new ServiceInstanceBinding(bindingId, serviceInstance.getId(), credentials, null);
 	}
 
-	private void addUserToVHostAndSetPermissions(String instanceId, String userName, String amqpHostAddress, int port,
-			String password, String vhostName) {
-
-		executeRequest(getAmqpApi(amqpHostAddress, port) + "/users/" + userName, HttpMethod.PUT, instanceId,
-				"{\"password\":\"" + password + "\", \"tags\" : \"none\"}");
-
-		executeRequest(getAmqpApi(amqpHostAddress, port) + "/permissions/" + vhostName + PATH_SEPARATOR + userName,
-				HttpMethod.PUT, instanceId, "{\"configure\":\".*\",\"write\":\".*\",\"read\":\".*\"}");
-	}
+	
 
 	@Override
 	protected void deleteBinding(String bindingId, ServiceInstance serviceInstance) throws ServiceBrokerException {
@@ -208,9 +219,11 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		if (apiHost == null) {
 			throw new ServiceBrokerException("No valid api port exists");
 		}
+		
+		
 
-		executeRequest(getAmqpApi(apiHost.getIp(), apiHost.getPort()) + "/users/" + binding.getId(), HttpMethod.DELETE,
-				serviceInstance.getId(), null);
+		executeRequest(getAmqpApi(apiHost.getIp(), apiHost.getPort()) + "/users/" + binding.getId(), HttpMethod.DELETE, getAdminUser(serviceInstance), getAdminPassword(serviceInstance),
+				null);
 	}
 
 	private String getAmqpApi(String amqpHostAddress, int port) {
@@ -222,9 +235,9 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		throw new UnsupportedOperationException();
 	}
 
-	private void executeRequest(String url, HttpMethod method, String instanceId, String payload) {
+	private void executeRequest(String url, HttpMethod method, String username, String password, String payload) {
 		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", buildAuthHeader(instanceId, instanceId));
+		headers.set("Authorization", buildAuthHeader(username, password));
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		headers.setContentType(MediaType.APPLICATION_JSON);
 

@@ -91,6 +91,8 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 		return rabbitMqService;
 	}
 	
+	// never used locally
+	/*
 	private RabbitMqService connection(ServiceInstance serviceInstance, String vhostName, String userName,
 			String password) throws IOException, TimeoutException {
 		ServerAddress host = serviceInstance.getHosts().get(0);
@@ -100,7 +102,7 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 				password);
 		return rabbitMqService;
 	}
-	
+	*/
 
 	/* (non-Javadoc)
 	 * @see de.evoila.cf.cpi.existing.CustomExistingService#bindRoleToInstanceWithPassword(de.evoila.cf.cpi.existing.CustomExistingServiceConnection, java.lang.String, java.lang.String, java.lang.String)
@@ -108,14 +110,11 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 	@Override
 	public void bindRoleToInstanceWithPassword(CustomExistingServiceConnection connection, String database,
 			String username, String password) throws Exception {
-		if(connection instanceof RabbitMqService) {
-			RabbitMqService rabbitConnection = (RabbitMqService) connection;
-			addUserToVHostAndSetPermissions(rabbitConnection.getUsername(), rabbitConnection.getPassword(), username, password, rabbitConnection.getHost(),adminPort, database);
-		}
+		// in rabbitmq not necessary.
 	}
 
 	
-	private void addUserToVHostAndSetPermissions(String adminname, String adminpassword, String newUserName, String newUserPassword, String amqpHostAddress, int port, String vhostName) {
+	public void addUserToVHostAndSetPermissions(String adminname, String adminpassword, String newUserName, String newUserPassword, String amqpHostAddress, int port, String vhostName) {
 
 		executeRequest(getAmqpApi(amqpHostAddress, port) + "/users/" + newUserName, HttpMethod.PUT, adminname, adminpassword,
 				"{\"password\":\"" + newUserPassword + "\", \"tags\" : \"none\"}");
@@ -123,6 +122,7 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 		executeRequest(getAmqpApi(amqpHostAddress, port) + "/permissions/" + vhostName + PATH_SEPARATOR + newUserName,
 				HttpMethod.PUT, adminname, adminpassword, "{\"configure\":\".*\",\"write\":\".*\",\"read\":\".*\"}");
 	}
+	
 	
 	private String getAmqpApi(String amqpHostAddress, int port) {
 		return HTTP + amqpHostAddress + ":" + port + API;
