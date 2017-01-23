@@ -1,12 +1,12 @@
 heat_template_version: 2015-10-15
-description: Deployment Description for Ports for ReddisMQ
+description: Deployment Description for Ports for Ports and IPs for RabbitMQ Cluster (Script 1/3)
 parameters:
   network_id:
     type: string
     description: Network used by the server
   port_number:
     type: number
-    description: number of secondaries for replica set
+    description: Number of nodes for RabbitMQ-Cluster
 resources:
   sec_ports:
     type: OS::Heat::ResourceGroup
@@ -17,11 +17,11 @@ resources:
         properties:
           network_id: {get_param: network_id}
           security_groups:
-            - all
+            - cf-private
 outputs:
   port_ips:
     value: {get_attr: [sec_ports, fixed_ips, 0, ip_address]}
-    description: all ips of ips in the port group
+    description: all ips in the port group
   port_ports:
     value: {get_attr: [sec_ports, refs]}
     description: IDs of ports
