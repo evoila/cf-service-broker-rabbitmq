@@ -75,14 +75,14 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 	 */
 
 	@Override
-	public CustomExistingServiceConnection connection(String host, int port, String database, String username,
+	public CustomExistingServiceConnection connection(List<String> host, int port, String database, String username,
 			String password) throws Exception {
 		
 		log.info("Opening connection to " + host + ":" + port);
 		RabbitMqService rabbitMqService = new RabbitMqService();
 		
 		try{
-		rabbitMqService.createConnection(host, port, database, username,
+		rabbitMqService.createConnection(host.get(0), port, database, username,
 				password);
 		} catch (UnknownHostException e){
 			log.info("Could not establish connection", e);
