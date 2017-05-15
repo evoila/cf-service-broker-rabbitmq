@@ -26,7 +26,7 @@ import de.evoila.cf.broker.custom.rabbitmq.*;
  *
  */
 @Service
-@ConditionalOnProperty(prefix = "existing.endpoint", name = { "host", "port", "username", "password", "database",
+@ConditionalOnProperty(prefix = "existing.endpoint", name = { "hosts", "port", "username", "password", "database",
 		"adminport" }, havingValue = "")
 public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 
@@ -69,8 +69,8 @@ public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 	
 	@Override
 	protected List<ServerAddress> getExistingServiceHosts() {
-		ServerAddress serverAddress = new ServerAddress("default", super.getHost(), super.getPort());
-		ServerAddress serverApiAdress = new ServerAddress("user", super.getHost(), adminPort);
+		ServerAddress serverAddress = new ServerAddress("default", super.getHosts().get(0), super.getPort());
+		ServerAddress serverApiAdress = new ServerAddress("user", super.getHosts().get(0), adminPort);
 		return Lists.newArrayList(serverAddress, serverApiAdress);
 	}
 
