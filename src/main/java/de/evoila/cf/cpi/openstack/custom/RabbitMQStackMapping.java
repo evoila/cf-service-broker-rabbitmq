@@ -13,10 +13,11 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * @author Christian Mueller, evoila
  *
  */
-public class StackMapping implements BaseEntity<String> {
+public class RabbitMQStackMapping implements BaseEntity<String> {
 	private String id;
 	private String portsStack;
 	private String primaryStack;
+	private String volumeStack;
 	private List<String> secondaryStacks = Lists.newArrayList();
 	private List<ServerAddress> serverAddresses = Lists.newArrayList();
 
@@ -83,5 +84,13 @@ public class StackMapping implements BaseEntity<String> {
 
 	public void removeServerAddress(ServerAddress serverAddress) {
 		this.serverAddresses.remove(serverAddress);
+	}
+
+	public String getVolumeStack() {
+		return volumeStack;
+	}
+
+	public void setVolumeStack(String volumeStack) {
+		this.volumeStack = volumeStack;
 	}
 }

@@ -9,6 +9,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
  *
  */
 @ConditionalOnProperty(prefix = "openstack", name = { "log_host", "log_port"}, havingValue = "")
-public interface StackMappingRepository extends MongoRepository<StackMapping, String> {
+public interface StackMappingRepository extends MongoRepository<RabbitMQStackMapping, String> {
 
 }

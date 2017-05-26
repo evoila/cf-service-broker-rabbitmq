@@ -34,7 +34,7 @@ public class RabbitMqIpAccessor extends CustomIpAccessor {
 
 	@Override
 	public List<ServerAddress> getIpAddresses(String instanceId) throws PlatformException {
-		StackMapping stackMapping = stackMappingRepo.findOne(instanceId);
+		RabbitMQStackMapping stackMapping = stackMappingRepo.findOne(instanceId);
 
 		if (stackMapping != null) {
 			return stackMapping.getServerAddresses();
