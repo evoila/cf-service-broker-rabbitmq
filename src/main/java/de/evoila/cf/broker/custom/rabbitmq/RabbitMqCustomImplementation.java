@@ -117,7 +117,7 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 	public void addUserToVHostAndSetPermissions(String adminname, String adminpassword, String newUserName, String newUserPassword, String amqpHostAddress, int port, String vhostName) {
 
 		executeRequest(getAmqpApi(amqpHostAddress, port) + "/users/" + newUserName, HttpMethod.PUT, adminname, adminpassword,
-				"{\"password\":\"" + newUserPassword + "\", \"tags\" : \"none\"}");
+                "{\"password\":\"" + newUserPassword + "\", \"tags\" : \"policymaker\"}");
 
 		executeRequest(getAmqpApi(amqpHostAddress, port) + "/permissions/" + vhostName + PATH_SEPARATOR + newUserName,
 				HttpMethod.PUT, adminname, adminpassword, "{\"configure\":\".*\",\"write\":\".*\",\"read\":\".*\"}");
