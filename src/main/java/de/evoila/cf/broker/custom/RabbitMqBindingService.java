@@ -29,10 +29,12 @@ import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.Plan;
+import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.RouteBinding;
 import de.evoila.cf.broker.model.ServerAddress;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
+import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import jersey.repackaged.com.google.common.collect.Lists;
 
@@ -82,6 +84,9 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	
 	@Autowired
 	private RabbitMqCustomImplementation rabbitMqCustomImplementation;
+	
+	@Autowired
+	private ServiceDefinitionRepository serviceDefinitionRepository;
 
 	private RabbitMqService connection(ServiceInstance serviceInstance, String vhostName, String userName,
 			String password) throws IOException, TimeoutException {
@@ -96,6 +101,9 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
 			List<ServerAddress> hosts) throws ServiceBrokerException {
 
+		
+		Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getPlanId());
+		
 		ServerAddress amqpHost = null, apiHost = null;
 		for (ServerAddress serverAddress : hosts) {
 			String name = serverAddress.getName();
@@ -126,7 +134,14 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		
 		String adminUsername = getAdminUser(serviceInstance);
 		String adminPassword = getAdminPassword(serviceInstance);
+		
+		if(plan.getPlatform().equals(Platform.OPENSTACK)) {
+			adminPassword = serviceInstance.getId();
+			adminUsername = serviceInstance.getId();
+		}
 
+		
+		
 		rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(adminUsername, adminPassword, userName, password, apiHostAddress, apiPort,
 				vhostName );
 
