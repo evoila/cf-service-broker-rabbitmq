@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.ServerAddress;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
+import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
 import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
 
 /**
@@ -20,7 +22,7 @@ import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
  */
 @Service
 @Primary
-@ConditionalOnProperty(prefix = "openstack", name = { "log_host", "log_port"}, havingValue = "")
+@ConditionalOnProperty(prefix = "openstack", name = { "endpoint"}, havingValue = "")
 public class RabbitMqIpAccessor extends CustomIpAccessor {
 
 	@SuppressWarnings("unused")
@@ -34,7 +36,7 @@ public class RabbitMqIpAccessor extends CustomIpAccessor {
 
 	@Override
 	public List<ServerAddress> getIpAddresses(String instanceId) throws PlatformException {
-		RabbitMQStackMapping stackMapping = stackMappingRepo.findOne(instanceId);
+		ClusterStackMapping stackMapping = stackMappingRepo.findOne(instanceId);
 
 		if (stackMapping != null) {
 			return stackMapping.getServerAddresses();
