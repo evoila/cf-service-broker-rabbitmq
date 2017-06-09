@@ -1,0 +1,161 @@
+heat_template_version: 2016-04-08
+description: >
+        Deployment of RabbitMQ-Cluster with 3 nodes (Skript 3/5)
+        Scripts 4 and 5 will used by this script for creation of the master and the standby node.
+parameters:
+
+  image_id:
+    type: string
+    description: Image used for servers
+    default: ubuntu-xenial-16.04_lastest
+  key_name:
+    type: string
+    description: SSH key to connect to the servers
+  flavor:
+    type: string
+    description: flavor used by the servers
+    default: gp1.small
+  availability_zone:
+    type: string
+    description: Availability Zone of the nodes.
+    default: zone00
+  resource_name:
+    type: string
+    description: Name-prefix for created resources in OpenStack.
+
+  master_volume_id:
+    type: string
+    description: ID of the pre-created volume to be attached to the master node.
+  master_port:
+    type: string
+    description: Port-ID of the pre-created Port for the master node.
+  master_ip:
+    type: string
+    description: IP of master node.
+
+  mirror1_volume_id:
+    type: string
+    description: ID of the pre-created volume to be attached to the mirror node 1.
+  mirror1_port:
+    type: string
+    description: Port-ID of the pre-created Port for the mirror node 1.
+  mirror1_ip:
+    type: string
+    description: IP of mirror node 1.
+
+  mirror2_volume_id:
+    type: string
+    description: ID of the pre-created volume to be attached to the mirror node 2.
+  mirror2_port:
+    type: string
+    description: Port-ID of the pre-created Port for the mirror node 2.
+  mirror2_ip:
+    type: string
+    description: IP of mirror node 2.
+
+  rabbitmq_vhost:
+    type: string
+    description: RabbitMQ name
+  admin_user:
+    type: string
+    description: Admin user for the service.
+    default: servicedb
+  admin_password:
+    type: string
+    hidden: true
+    description: Password for the service_user password.
+  erlang_key:
+    type: string
+    description: shared erlang key for all nodes
+
+resources:
+
+  rabbitmq_master_node:
+    type: master.yaml
+    properties:
+      master_hostname:
+        str_replace:
+          template: $hostname-n0
+          params:
+            $hostname: { get_param: resource_name }
+      image_id: {get_param: image_id }
+      key_name: {get_param: key_name }
+      flavor: {get_param: flavor }
+      availability_zone: {get_param: availability_zone }
+      rabbitmq_vhost: {get_param: rabbitmq_vhost }
+      admin_user: {get_param: admin_user }
+      admin_password: {get_param: admin_password }
+      erlang_key: {get_param: erlang_key }
+      etc_hosts:
+        str_replace:
+          template: 127.0.0.1  localhost\n127.0.1.1  $hostname-n0\n\n$node1_ip  $hostname-n1\n\n$node2_ip  $hostname-n2
+          params:
+            $hostname: { get_param: resource_name }
+            $node1_ip: { get_param: mirror1_ip }
+            $node2_ip: { get_param: mirror2_ip }
+      master_port: {get_param: master_port }
+      master_volume_id: {get_param: master_volume_id }
+
+  rabbitmq_mirror_node_1:
+    type: mirrors.yaml
+    depends_on: rabbitmq_master_node
+    properties:
+      mirror_hostname:
+        str_replace:
+          template: $hostname-n1
+          params:
+            $hostname: { get_param: resource_name }
+      image_id: {get_param: image_id }
+      key_name: {get_param: key_name }
+      flavor: {get_param: flavor }
+      availability_zone: {get_param: availability_zone }
+      rabbitmq_vhost: {get_param: rabbitmq_vhost }
+      admin_user: {get_param: admin_user }
+      admin_password: {get_param: admin_password }
+      erlang_key: {get_param: erlang_key }
+      etc_hosts:
+        str_replace:
+          template: 127.0.0.1  localhost\n127.0.1.1  $hostname-n1\n\n$node1_ip  $hostname-n0\n\n$node2_ip  $hostname-n2
+          params:
+            $hostname: { get_param: resource_name }
+            $node1_ip: { get_param: master_ip }
+            $node2_ip: { get_param: mirror2_ip }
+      mirror_port: {get_param: mirror1_port }
+      mirror_volume_id: {get_param: mirror1_volume_id }
+      master_hostname:
+        str_replace:
+          template: $hostname-n0
+          params:
+            $hostname: { get_param: resource_name }
+
+  rabbitmq_mirror_node_2:
+    type: mirrors.yaml
+    depends_on: rabbitmq_master_node
+    properties:
+      mirror_hostname:
+        str_replace:
+          template: $hostname-n2
+          params:
+            $hostname: { get_param: resource_name }
+      image_id: {get_param: image_id }
+      key_name: {get_param: key_name }
+      flavor: {get_param: flavor }
+      availability_zone: {get_param: availability_zone }
+      rabbitmq_vhost: {get_param: rabbitmq_vhost }
+      admin_user: {get_param: admin_user }
+      admin_password: {get_param: admin_password }
+      erlang_key: {get_param: erlang_key }
+      etc_hosts:
+        str_replace:
+          template: 127.0.0.1  localhost\n127.0.1.1  $hostname-n2\n\n$node1_ip  $hostname-n0\n\n$node2_ip  $hostname-n1
+          params:
+            $hostname: { get_param: resource_name }
+            $node1_ip: { get_param: master_ip }
+            $node2_ip: { get_param: mirror1_ip }
+      mirror_port: {get_param: mirror2_port }
+      mirror_volume_id: {get_param: mirror2_volume_id }
+      master_hostname:
+        str_replace:
+          template: $hostname-n0
+          params:
+            $hostname: { get_param: resource_name }

@@ -1,0 +1,104 @@
+heat_template_version: 2016-04-08
+description: >
+  This is a load balancer for TCP services based on LBaaS V2. It
+  implements a best practice configuration.
+
+parameter_groups:
+
+parameters:
+
+  name:
+    description: Name of the load balancer
+    type: string
+    constraints:
+      - allowed_pattern: "[a-z][a-z0-9-]{1,}"
+
+  subnet:
+    description: Subnet to allocate the VIP in
+    type: string
+    constraints:
+      - custom_constraint: neutron.subnet
+
+  port:
+    type: number
+    description: Port the load balancer should listen on
+    constraints:
+      - range: { min: 1, max: 65535 }
+
+  addresses:
+    type: comma_delimited_list
+    description: Member Ips (as comma delimited list).
+
+
+resources:
+
+  loadbalancer:
+    type: OS::Neutron::LBaaS::LoadBalancer
+    properties:
+      name:
+        list_join: ['-', [{ get_param: name }, "loadbalancer"]]
+      vip_subnet: { get_param: subnet }
+
+  pool:
+    type: OS::Neutron::LBaaS::Pool
+    properties:
+      name:
+        list_join: ['-', [{ get_param: name }, "pool"]]
+      protocol: TCP
+      lb_algorithm: ROUND_ROBIN
+      listener: { get_resource: listener }
+      session_persistence:
+        type: SOURCE_IP
+
+  member0:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      address:  {get_param: [ addresses, 0 ]}
+      pool: { get_resource: pool }
+      protocol_port: { get_param: port }
+      subnet: {get_param: subnet}
+
+  member1:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      address:  {get_param: [ addresses, 1 ]}
+      pool: { get_resource: pool }
+      protocol_port: { get_param: port }
+      subnet: {get_param: subnet}
+
+  member2:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      address:  {get_param: [ addresses, 2 ]}
+      pool: { get_resource: pool }
+      protocol_port: { get_param: port }
+      subnet: {get_param: subnet}
+
+  monitor:
+    type: OS::Neutron::LBaaS::HealthMonitor
+    properties:
+      type: TCP
+      delay: 5
+      max_retries: 3
+      timeout: 2
+      pool: { get_resource: pool }
+
+  listener:
+    type: OS::Neutron::LBaaS::Listener
+    properties:
+      name:
+        list_join: ['-', [{ get_param: name }, "listener"]]
+      loadbalancer: { get_resource: loadbalancer }
+      protocol: TCP
+      protocol_port: { get_param: port }
+
+outputs:
+
+  vip_address:
+    value: { get_attr: [ loadbalancer, vip_address] }
+
+  vip_port_id:
+    value: { get_attr: [ loadbalancer, vip_port_id] }
+
+  pool:
+    value: { get_resource: pool }
