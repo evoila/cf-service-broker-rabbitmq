@@ -121,6 +121,8 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 
 		executeRequest(getAmqpApi(amqpHostAddress, port) + "/permissions/" + vhostName + PATH_SEPARATOR + newUserName,
 				HttpMethod.PUT, adminname, adminpassword, "{\"configure\":\".*\",\"write\":\".*\",\"read\":\".*\"}");
+		
+		setHaPolicy(amqpHostAddress,port,newUserName,newUserPassword,vhostName);
 	}
 	
 	
@@ -138,6 +140,13 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 			String password, String vhostName) {
 		String payload = null;
 		executeRequest(getAmqpApi(amqpHostAddress, port) + "/vhosts/" + vhostName, HttpMethod.PUT, username, password, payload);
+	}
+	
+	
+	public void setHaPolicy(String amqpHostAddress, int port, String username, 
+			String password, String vhostName) {
+		String payload = "{\"pattern\": \".*\",\"apply-to\": \"all\",\"definition\": {\"ha-mode\": \"all\",\"ha-sync-mode\": \"automatic\"},\"priority\": 0}";
+		executeRequest(getAmqpApi(amqpHostAddress, port) + "/policies/" + vhostName +"/ha-"+vhostName, HttpMethod.PUT, username, password, payload);
 	}
 
 	
@@ -158,11 +167,16 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 		new RestTemplate().exchange(url, method, entity, String.class);
 	}
 
+
 	private String buildAuthHeader(String username, String password) {
 		String auth = username + ":" + password;
 		byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("UTF-8")));
 
 		return "Basic " + new String(encodedAuth);
+	}
+	
+	public void setAdminPort(int adminPort) {
+		this.adminPort = adminPort;
 	}
 
 	

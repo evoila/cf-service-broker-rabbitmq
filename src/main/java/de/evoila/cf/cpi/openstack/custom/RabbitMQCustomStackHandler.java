@@ -24,6 +24,7 @@ import de.evoila.cf.broker.model.ServerAddress;
 import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
 import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
 import de.evoila.cf.cpi.openstack.custom.cluster.ClusterStackHandler;
+import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
 
 /**
  * @author Christian Mueller, evoila
@@ -68,6 +69,9 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 			} catch (PlatformException | InterruptedException e) {
 				log.error("Could not delete Stack " + stackMapping.getPrimaryStack() + " Instance " + internalId);
 				log.error(e.getMessage());
+			}
+			for(String stack : stackMapping.getSecondaryStacks()) {
+				super.delete(stack);
 			}
 			super.delete(stackMapping.getPortsStack());
 			super.delete(stackMapping.getVolumeStack());
@@ -120,8 +124,12 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 		Stack loadBalancer = createLoadStack(instanceId, customParameters, ips_clone);
 		stackMapping.addSecondaryStack(loadBalancer.getId());
 		
+		setHaProxyPolicy(stackMapping);
+		
 		String ip = extractSingleValueResponses(loadBalancer , "vip_address")[0];
 		stackMapping.addServerAddress(new ServerAddress("default", ip, 5672));
+		
+		
 
 		stackMappingRepo.save(stackMapping);
 		
@@ -129,6 +137,23 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 	}
 	
 
+
+	private void setHaProxyPolicy(ClusterStackMapping stackMapping) {
+		RabbitMqCustomImplementation rabbitMqImplementation = new RabbitMqCustomImplementation();
+		ServerAddress apiAddress = null;
+		for(ServerAddress address : stackMapping.getServerAddresses()) {
+			if(address.getName().equals("user")) {
+				apiAddress = address;
+				break;
+			}
+		}
+		if(apiAddress != null) {
+			int port = apiAddress.getPort();
+			rabbitMqImplementation.setAdminPort(port);
+			rabbitMqImplementation.setHaPolicy(apiAddress.getIp(), port, stackMapping.getId(), stackMapping.getId(), stackMapping.getId());
+			return; 
+		}
+	}
 
 	private Stack createLoadStack(String instanceId, Map<String, String> customParameters,List<String> ips_clone) throws PlatformException {
 		Map<String, String> parameters = new HashMap<String,String>();
