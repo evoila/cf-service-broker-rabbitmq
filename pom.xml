@@ -12,6 +12,14 @@
 	<artifactId>cf-service-broker-rabbitmq</artifactId>
 	<packaging>jar</packaging>
 	<name>ssb-rabbitmq</name>
+        <version>0.1-RC</version>
+
+	<properties>
+		<core.version>0.1-RC</core.version>
+        	<deployment.version>0.1-RC</deployment.version>
+        	<persistence.version>0.1-RC</persistence.version>
+    	</properties>
+
 
 	<dependencies>
 		<!-- RabbitMQ -->
@@ -24,43 +32,27 @@
 		<dependency>
 			<groupId>de.evoila.cf.broker</groupId>
 			<artifactId>docker</artifactId>
-			<version>1.1.0</version>
+			<version>${core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.evoila.cf.broker</groupId>
 			<artifactId>docker</artifactId>
-			<version>1.1.0</version>
+			<version>${deployment.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.evoila.cf.broker</groupId>
 			<artifactId>openstack</artifactId>
-			<version>1.1.0</version>
+			<version>${deployment.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.evoila.cf.broker</groupId>
 			<artifactId>existing-service</artifactId>
-			<version>1.1.0</version>
+			<version>${deployment.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.evoila.cf.broker</groupId>
 			<artifactId>persistence-mongodb</artifactId>
-			<version>1.1.0</version>
+			<version>${persistence.version}</version>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ftp</artifactId>
-				<version>1.0-beta-6</version>
-			</extension>
-		</extensions>
-	</build>
-	<distributionManagement>
-		<repository>
-			<id>ftp-meshstack</id>
-			<url>ftp://maven.meshstack.io</url>
-		</repository>
-	</distributionManagement>
 </project>
