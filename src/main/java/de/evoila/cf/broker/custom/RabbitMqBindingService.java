@@ -123,6 +123,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		}
 
 		String amqpHostAddress = amqpHost.getIp();
+		int amqpPort = amqpHost.getPort();
 		String vhostName = serviceInstance.getId();
 
 		String userName = bindingId;
@@ -159,6 +160,14 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		Map<String, Object> credentials = new HashMap<String, Object>();
 		credentials.put("uri", rabbitMqUrl);
 		credentials.put("api_uri", apiUrl);
+		credentials.put("username", userName);
+		credentials.put("password", password);
+		credentials.put("amqpHost", amqpHostAddress);
+		credentials.put("amqpPort", amqpPort);
+		credentials.put("apiHost", apiHostAddress);
+		credentials.put("apiPort", apiPort);
+		credentials.put("vhost", vhostName);
+		
 		return credentials;
 	}
 
