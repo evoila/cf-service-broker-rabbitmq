@@ -14,7 +14,7 @@ import org.openstack4j.model.heat.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.bean.OpenstackBean;
@@ -30,7 +30,7 @@ import de.evoila.cf.cpi.openstack.custom.cluster.ClusterStackHandler;
  *
  */
 @Service
-@ConditionalOnProperty(prefix = "openstack", name = { "keypair" }, havingValue = "")
+@ConditionalOnBean(OpenstackBean.class)
 public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 	
 	private static final String NAME_TEMPLATE = "rabbitmq-%s-%s";

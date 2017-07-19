@@ -8,7 +8,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
@@ -28,8 +28,7 @@ import de.evoila.cf.cpi.existing.ExistingServiceFactory;
  *
  */
 @Service
-@ConditionalOnProperty(prefix = "existing.endpoint", name = { "port", "username", "password", "database",
-		"adminport" }, havingValue = "")
+@ConditionalOnBean(ExistingEndpointBean.class)
 public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 
 	private int adminPort;
