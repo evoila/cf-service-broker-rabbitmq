@@ -3,17 +3,17 @@
  */
 package de.evoila.cf.broker.custom.rabbitmq;
 
-import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -21,12 +21,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.cpi.existing.CustomExistingService;
 import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 
 /**
@@ -65,10 +63,17 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 	private static final String API_URL_PATTERN = HTTP + STRING_URL_VALUE + USER_PASSWORD_SEPARATOR + STRING_URL_VALUE
 			+ CREDENTIAL_IP_SEPARATOR + STRING_URL_VALUE + IP_PORT_SEPARATOR + DOUBLE_URL_VALUE;
 
-	@Value("${existing.endpoint.adminport}")
 	private int adminPort;
 	
+	@Autowired
+	private ExistingEndpointBean existingEndpointBean;
+	
 	private Logger log = LoggerFactory.getLogger(RabbitMqCustomImplementation.class);
+	
+	@PostConstruct
+	private void initValues() {
+		adminPort = existingEndpointBean.getAdminport();
+	}
 	
 	/* (non-Javadoc)
 	 * @see de.evoila.cf.cpi.existing.CustomExistingService#connection(java.lang.String, int, java.lang.String, java.lang.String, java.lang.String)

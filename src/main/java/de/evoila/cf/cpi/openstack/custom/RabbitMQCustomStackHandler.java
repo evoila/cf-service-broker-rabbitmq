@@ -4,34 +4,33 @@
 package de.evoila.cf.cpi.openstack.custom;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import org.neo4j.cypher.internal.compiler.v2_2.perty.recipe.Pretty.nestWith;
+import javax.annotation.PostConstruct;
+
 import org.openstack4j.model.heat.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
+import de.evoila.cf.broker.bean.OpenstackBean;
+import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.ServerAddress;
 import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
 import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
 import de.evoila.cf.cpi.openstack.custom.cluster.ClusterStackHandler;
-import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
 
 /**
  * @author Christian Mueller, evoila
  *
  */
 @Service
-@ConditionalOnProperty(prefix = "openstack", name = { "keypair" }, havingValue = "")
+@ConditionalOnBean(OpenstackBean.class)
 public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 	
 	private static final String NAME_TEMPLATE = "rabbitmq-%s-%s";
@@ -39,16 +38,23 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 	protected static final String PRIMARY_TEMPLATE = "/openstack/master.yaml";
 	protected static final String SECONDARY_TEMPLATE = "/openstack/mirrors.yaml";
 	
-	@Value("${openstack.keypair}")
 	private String keyPair;
 	
-	@Value("${openstack.subnetId}")
 	private String subnetId;
 	
 	private final Logger log = LoggerFactory.getLogger(RabbitMQCustomStackHandler.class);
 
 	@Autowired
 	private StackMappingRepository stackMappingRepo;
+	
+	@Autowired
+	private OpenstackBean openstackBean;
+	
+	@PostConstruct
+	private void initValues() {
+		keyPair = openstackBean.getKeypair();
+		subnetId = openstackBean.getSubnetId();
+	}
 	
 	public RabbitMQCustomStackHandler() {
 		super();

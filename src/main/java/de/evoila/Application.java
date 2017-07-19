@@ -7,8 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.actuate.system.ApplicationPidFileWriter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.system.ApplicationPidFileWriter;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
@@ -22,6 +23,8 @@ import de.evoila.cf.cpi.custom.props.RabbitMQCustomPropertyHandler;
  * @author Johannes Hiemer.
  *
  */
+
+@RefreshScope
 @SpringBootApplication
 @EnableMongoRepositories(basePackages={"de.evoila.cf.cpi.openstack.custom", "de.evoila.cf.broker.persistence.mongodb.repository"})
 public class Application {
@@ -44,6 +47,7 @@ public class Application {
 		ApplicationContext ctx = springApplication.run(args);
 
 		Assert.notNull(ctx);
+		
 	}
 
 }

@@ -13,11 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -25,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
@@ -75,11 +77,9 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 			+ CREDENTIAL_IP_SEPARATOR + STRING_URL_VALUE + IP_PORT_SEPARATOR + DOUBLE_URL_VALUE;
 
 	private Logger log = LoggerFactory.getLogger(getClass());
-	
-	@Value("${existing.endpoint.username:}")
+
 	private String username;
-	
-	@Value("${existing.endpoint.password:}")
+
 	private String password;
 	
 	@Autowired
@@ -87,6 +87,15 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	
 	@Autowired
 	private ServiceDefinitionRepository serviceDefinitionRepository;
+	
+	@Autowired
+	private ExistingEndpointBean existingEndpointBean;
+	
+	@PostConstruct
+	private void initValues() {
+		username = existingEndpointBean.getUsername();
+		password = existingEndpointBean.getPassword();
+	}
 
 	private RabbitMqService connection(ServiceInstance serviceInstance, String vhostName, String userName,
 			String password) throws IOException, TimeoutException {

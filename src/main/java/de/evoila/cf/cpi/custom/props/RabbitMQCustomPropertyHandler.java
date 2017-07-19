@@ -9,11 +9,12 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.keygen.BytesKeyGenerator;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.util.Base64Utils;
 
+import de.evoila.cf.broker.bean.RabbitMQSecurityKeyBean;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
 
@@ -31,14 +32,17 @@ public class RabbitMQCustomPropertyHandler implements DomainBasedCustomPropertyH
 	public static final String ERLANG_KEY = "erlang_key";
 	
 	private final Logger log = LoggerFactory.getLogger(RabbitMQCustomPropertyHandler.class);
-	
-	@Value("${rabbitmq.security.key.length}")
+
 	private int keyLength;
 		
 	private BytesKeyGenerator secureRandom;
 	
+	@Autowired
+	private RabbitMQSecurityKeyBean rabbitmqSecurityKeyBean;
+	
 	@PostConstruct
 	public void init() {
+		keyLength = rabbitmqSecurityKeyBean.getLength();
 		secureRandom = KeyGenerators.secureRandom(keyLength);
 	}
 

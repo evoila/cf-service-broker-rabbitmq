@@ -5,36 +5,44 @@ package de.evoila.cf.broker.custom;
 
 import java.util.List;
 
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
 
+import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
+import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
 //import de.evoila.cf.broker.custom.mongodb.MongoDbService;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.ServerAddress;
 import de.evoila.cf.cpi.existing.CustomExistingService;
 import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
 import de.evoila.cf.cpi.existing.ExistingServiceFactory;
-import de.evoila.cf.broker.custom.rabbitmq.*;
 
 /**
  * @author sebastian boeing, evoila.
  *
  */
 @Service
-@ConditionalOnProperty(prefix = "existing.endpoint", name = { "hosts", "port", "username", "password", "database",
-		"adminport" }, havingValue = "")
+@ConditionalOnBean(ExistingEndpointBean.class)
 public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 
-	@Value("${existing.endpoint.adminport}")
 	private int adminPort;
 
 	@Autowired
 	private RabbitMqCustomImplementation rabbitMQ;
+	
+	@Autowired
+	private ExistingEndpointBean existingEndpointBean;
+	
+	@PostConstruct
+	private void initValues() {
+		adminPort = existingEndpointBean.getAdminport();
+	}
 
 	public void createVHost(RabbitMqService connection, String database) throws PlatformException {
 		rabbitMQ.createVHosts(connection.getHost(), adminPort, connection.getUsername(),
