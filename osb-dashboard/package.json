@@ -39,7 +39,11 @@
     "ci:mysql" : "yarn run tslint && yarn run test && yarn run build:mysql && yarn run e2e:mysql",
     "start:mysql": "ts-node ./scripts/start.ts -t mysql",
     "build:mysql": "ts-node ./scripts/build.ts -t mysql",
-    "e2e:mysql": "ts-node ./scripts/dist-e2e.ts -t mysql"
+    "e2e:mysql": "ts-node ./scripts/dist-e2e.ts -t mysql",
+    "start:rabbitmq": "ts-node ./scripts/start.ts -t rabbitmq",
+    "e2e:rabbitmq": "ts-node ./scripts/dist-e2e.ts -t rabbitmq",
+    "build:rabbitmq": "ts-node ./scripts/build.ts -t rabbitmq",
+    "ci:rabbitmq" : "yarn run tslint && yarn run rabbitmq && yarn run build:rabbitmq && yarn run e2e:rabbitmq"
   },
   "private": true,
   "dependencies": {
