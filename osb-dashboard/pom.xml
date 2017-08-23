@@ -12,7 +12,7 @@
   <parent>
     <groupId>de.evoila.cf.broker</groupId>
     <artifactId>repo-parent</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -107,6 +107,18 @@
               <arguments>install</arguments>
             </configuration>
           </execution>
+          <!--
+          <execution>
+            <phase>process-resources</phase>
+            <id>yarn upgrade</id>
+            <goals>
+              <goal>yarn</goal>
+            </goals>
+            <configuration>
+              <arguments>upgrade</arguments>
+            </configuration>
+          </execution>
+          -->
           <execution>
             <phase>compile</phase>
             <id>yarn run build</id>
