@@ -35,8 +35,8 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 	
 	private static final String NAME_TEMPLATE = "rabbitmq-%s-%s";
 	
-	protected static final String PRIMARY_TEMPLATE = "/openstack/master.yaml";
-	protected static final String SECONDARY_TEMPLATE = "/openstack/mirrors.yaml";
+	protected static final String PRIMARY_TEMPLATE = "/openstack/mirrors.yaml";
+	protected static final String SECONDARY_TEMPLATE = "/openstack/node.yaml";
 	
 	private String keyPair;
 	
@@ -168,9 +168,15 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 		parameters.put("subnet", subnetId);
 		parameters.put("port", Integer.toString(5672));
 		parameters.put("addresses", RabbitMqParameterManager.join(ips_clone));
+		parameters.put("node_number", customParameters.containsValue(RabbitMqParameterManager.NODE_NUMBER) ? customParameters.get(RabbitMqParameterManager.NODE_NUMBER) : "1");
 
-		String loadBalancer = accessTemplate("/openstack/loadbalancer.yml");
-		heatFluent.create(name, loadBalancer, parameters, false, 10l);
+		String loadBalancer = accessTemplate("/openstack/loadbalancer.yaml");
+		String lbaasMember = accessTemplate("/openstack/lbaas-member.yaml");
+
+		Map<String, String> files = new HashMap<String, String>();
+		files.put("lbaas-member.yaml", lbaasMember);
+
+		heatFluent.create(name, loadBalancer, parameters, false, 10l, files);
 		Stack stack = stackProgressObserver.waitForStackCompletion(name);
 		
 
@@ -197,7 +203,7 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 		parametersPreIp.put(RabbitMqParameterManager.RESOURCE_NAME, name);
 		
 		String templatePorts = accessTemplate(PRE_IP_TEMPLATE);
-		
+
 		heatFluent.create(name, templatePorts, parametersPreIp, false, 10l);
 		
 		Stack preIpStack = stackProgressObserver.waitForStackCompletion(name);
@@ -221,24 +227,24 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 	
 	private Stack createMainStack(String instanceId, Map<String, String> customParameters) throws PlatformException {
 		Map<String, String> parametersMain = RabbitMqParameterManager.copyProperties(customParameters,
-				RabbitMqParameterManager.IMAGE_ID,
+																					 RabbitMqParameterManager.RESOURCE_NAME,
+																					 RabbitMqParameterManager.IMAGE_ID,
 				RabbitMqParameterManager.KEY_NAME,
 				RabbitMqParameterManager.FLAVOR,
 				RabbitMqParameterManager.AVAILABILITY_ZONE,
-				RabbitMqParameterManager.RESOURCE_NAME,
+
+																					 RabbitMqParameterManager.RABBITMQ_VHOST,
+																					 RabbitMqParameterManager.ADMIN_USER,
+																					 RabbitMqParameterManager.ADMIN_PASSWORD,
+																					 RabbitMqParameterManager.ERLANG_KEY,
 				RabbitMqParameterManager.MASTER_VOLUME_ID,
 				RabbitMqParameterManager.MASTER_PORT,
 				RabbitMqParameterManager.MASTER_IP,
-				RabbitMqParameterManager.MIRROR1_VOLUME_ID,
-				RabbitMqParameterManager.MIRROR1_PORT,
-				RabbitMqParameterManager.MIRROR1_IP,
-				RabbitMqParameterManager.MIRROR2_VOLUME_ID,
-				RabbitMqParameterManager.MIRROR2_PORT,
-				RabbitMqParameterManager.MIRROR2_IP,
-				RabbitMqParameterManager.RABBITMQ_VHOST,
-				RabbitMqParameterManager.ADMIN_USER,
-				RabbitMqParameterManager.ADMIN_PASSWORD,
-				RabbitMqParameterManager.ERLANG_KEY
+
+				RabbitMqParameterManager.MIRROR_NUMBER,
+				RabbitMqParameterManager.MIRROR_IPS,
+				RabbitMqParameterManager.MIRROR_PORTS,
+				RabbitMqParameterManager.MIRROR_VOLUME_IDS
 				);
 		
 		String name = String.format(NAME_TEMPLATE, instanceId, "cl");
@@ -249,8 +255,8 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 		String secondaries = accessTemplate(SECONDARY_TEMPLATE);
 		
 		Map<String, String> files = new HashMap<String, String>();
-		files.put("master.yaml", primary);
-		files.put("mirrors.yaml", secondaries);
+		files.put("mirrors.yaml", primary);
+		files.put("node.yaml", secondaries);
 		
 		heatFluent.create(name, template, parametersMain, false, 10l, files);
 		Stack stack = stackProgressObserver.waitForStackCompletion(name);

@@ -6,7 +6,7 @@ parameters:
   node_number:
     type: number
     description: Number of nodes for Cluster.
-    default: 3
+    default: 1
   resource_name:
     type: string
     description: Name-prefix for created resources in OpenStack.

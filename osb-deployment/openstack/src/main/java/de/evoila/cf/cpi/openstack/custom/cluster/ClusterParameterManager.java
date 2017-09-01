@@ -58,6 +58,11 @@ public class ClusterParameterManager {
 	public static final String MIRROR2_PORT = "mirror2_port";
 	public static final String MIRROR2_IP = "mirror2_ip";
 	public static final String ETC_HOSTS = "etc_hosts";
+
+	public static final String MIRROR_VOLUME_IDS = "mirror_volume_ids";
+	public static final String MIRROR_PORTS = "mirror_ports";
+	public static final String MIRROR_IPS = "mirror_ips";
+	public static final String MIRROR_NUMBER = "mirror_number";
 	
 	/** 
 	 * 
