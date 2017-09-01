@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.evoila.cf.broker</groupId>
 	<artifactId>parent</artifactId>
-	<version>1.1.0</version>
+	<version>1.2.0</version>
 	<packaging>pom</packaging>
 	<name>parent</name>
 
@@ -13,7 +13,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>1.5.2.RELEASE</version>
-		<relativePath /> <!-- lookup parent from repository -->
+		<relativePath /> 
 	</parent>
 
 	<modules>
@@ -29,7 +29,9 @@
 		<org.springframework.boot>1.5.2.RELEASE</org.springframework.boot>
 		<java.version>1.8</java.version>
 	</properties>
+
 	<dependencyManagement>
+	</dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
@@ -67,6 +69,11 @@
 
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-cloud-connectors</artifactId>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-security</artifactId>
 				<version>${org.springframework.boot}</version>
 			</dependency>
@@ -90,7 +97,7 @@
 			</dependency>
 
 		</dependencies>
-	</dependencyManagement>
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -123,26 +130,6 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>Maven Central</id>
-			<name>Central Maven Repository</name>
-			<url>http://repo1.maven.org/maven2/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>spring-snapshot</id>
-			<name>Spring Maven SNAPSHOT Repository</name>
-			<url>http://repo.springsource.org/libs-snapshot</url>
-		</repository>
-		<repository>
-			<id>spring-repository</id>
-			<url>https://repo.spring.io/libs-release</url>
-		</repository>
-	</repositories>
 
 	<pluginRepositories>
 		<pluginRepository>
