@@ -46,7 +46,7 @@ public class ClusterParameterManager {
 	public static final String SECONDARY_PORTS = "secondary_ports";
 	public static final String SECONDARY_VOLUME_IDS = "secondary_volume_ids";
 	public static final String SECONDARY_IPS = "secondary_ips";
-	
+
 	public static final String CLUSTER = "cluster";
 	
 	
@@ -64,8 +64,12 @@ public class ClusterParameterManager {
 	public static final String ETC_HOSTS = "etc_hosts";
 	public static final String SECONDARY_NUMBER = "secondary_number";
 
+	public static final String MIRROR_VOLUME_IDS = "mirror_volume_ids";
+	public static final String MIRROR_PORTS = "mirror_ports";
+	public static final String MIRROR_IPS = "mirror_ips";
+	public static final String MIRROR_NUMBER = "mirror_number";
 
-	/** 
+	/**
 	 * 
 	 */
 	public ClusterParameterManager() {

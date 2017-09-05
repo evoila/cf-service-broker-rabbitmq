@@ -1,5 +1,6 @@
 package de.evoila.cf.broker.service.impl;
 
+import de.evoila.cf.broker.bean.BackupConfiguration;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;

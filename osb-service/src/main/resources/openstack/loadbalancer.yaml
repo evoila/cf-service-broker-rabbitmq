@@ -30,6 +30,11 @@ parameters:
     description: Member Ips (as comma delimited list).
 
 
+  node_number:
+    type: number
+    description: number of nodes
+    default: 3
+
 resources:
 
   loadbalancer:
@@ -50,30 +55,6 @@ resources:
       session_persistence:
         type: SOURCE_IP
 
-  member0:
-    type: OS::Neutron::LBaaS::PoolMember
-    properties:
-      address:  {get_param: [ addresses, 0 ]}
-      pool: { get_resource: pool }
-      protocol_port: { get_param: port }
-      subnet: {get_param: subnet}
-
-  member1:
-    type: OS::Neutron::LBaaS::PoolMember
-    properties:
-      address:  {get_param: [ addresses, 1 ]}
-      pool: { get_resource: pool }
-      protocol_port: { get_param: port }
-      subnet: {get_param: subnet}
-
-  member2:
-    type: OS::Neutron::LBaaS::PoolMember
-    properties:
-      address:  {get_param: [ addresses, 2 ]}
-      pool: { get_resource: pool }
-      protocol_port: { get_param: port }
-      subnet: {get_param: subnet}
-
   monitor:
     type: OS::Neutron::LBaaS::HealthMonitor
     properties:
@@ -91,6 +72,20 @@ resources:
       loadbalancer: { get_resource: loadbalancer }
       protocol: TCP
       protocol_port: { get_param: port }
+
+  member:
+    type: OS::Heat::ResourceGroup
+    depends_on: pool
+    properties:
+      count: { get_param: node_number }
+      resource_def:
+        type: lbaas-member.yaml
+        properties:
+          addresses: { get_param: addresses }
+          index: 0%index%
+          pool: { get_resource: pool }
+          port: { get_param: port }
+          subnet: {get_param: subnet }
 
 outputs:
 

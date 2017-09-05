@@ -1,12 +1,13 @@
 package de.evoila.cf.broker.bean;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 /** @author Yannic Remmet */
 @Service
 @ConfigurationProperties(prefix="backup")
-//@ConditionalOnProperty(prefix = "backup", name = {"uri", "user", "password"}, havingValue = "")
+@ConditionalOnProperty(prefix = "backup", name = {"uri", "user", "password"}, havingValue = "")
 public class BackupConfiguration {
 
     private String authToken;

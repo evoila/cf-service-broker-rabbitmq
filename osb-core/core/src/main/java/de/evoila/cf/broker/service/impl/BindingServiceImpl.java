@@ -134,14 +134,7 @@ public abstract class BindingServiceImpl implements BindingService {
 		return serviceInstanceRepository.getServiceInstance(serviceInstanceId);
 	}
 
-	/**
-	 * @param bindingId
-	 * @param serviceInstance
-	 * @param plan
-	 * @param externalAddresses
-	 * @return
-	 * @throws ServiceBrokerException
-	 */
+
 	protected ServiceInstanceBinding bindServiceKey(String bindingId, ServiceInstance serviceInstance, Plan plan,
 			List<ServerAddress> externalAddresses) throws ServiceBrokerException {
 
@@ -155,13 +148,7 @@ public abstract class BindingServiceImpl implements BindingService {
 		return serviceInstanceBinding;
 	}
 
-	/**
-	 * @param bindingId
-	 * @param serviceInstance
-	 * @param plan
-	 * @return
-	 * @throws ServiceBrokerException
-	 */
+
 	protected ServiceInstanceBinding bindService(String bindingId, ServiceInstance serviceInstance, Plan plan)
 			throws ServiceBrokerException {
 
