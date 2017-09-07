@@ -15,6 +15,8 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.PostConstruct;
 
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
+import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +89,9 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	
 	@Autowired
 	private ServiceDefinitionRepository serviceDefinitionRepository;
+
+	@Autowired
+	private StackMappingRepository stackMappingRepository;
 	
 	@Autowired
 	private ExistingEndpointBean existingEndpointBean;
@@ -181,10 +186,16 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	}
 
 	private String getAdminPassword(ServiceInstance serviceInstance) {
+		if(stackMappingRepository.exists(serviceInstance.getId())){
+			return serviceInstance.getId();
+		}
 		return (this.password == null || this.password.equals("")) ? serviceInstance.getId() : this.password;
 	}
 
 	private String getAdminUser(ServiceInstance serviceInstance) {
+		if(stackMappingRepository.exists(serviceInstance.getId())){
+			return serviceInstance.getId();
+		}
 		return (this.username == null || this.username.equals("")) ? serviceInstance.getId() : this.username;
 	}
 
