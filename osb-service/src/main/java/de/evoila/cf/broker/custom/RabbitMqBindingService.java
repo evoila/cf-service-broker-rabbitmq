@@ -113,10 +113,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	}
 
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
-			List<ServerAddress> hosts) throws ServiceBrokerException {
-
-		
-		Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getPlanId());
+			List<ServerAddress> hosts, Plan plan) throws ServiceBrokerException {
 		
 		ServerAddress amqpHost = null, apiHost = null;
 		for (ServerAddress serverAddress : hosts) {
@@ -213,7 +210,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 		log.debug("bind service key");
 
-		Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, externalAddresses);
+		Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, externalAddresses, plan);
 
 		ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(),
 				credentials, null);
@@ -236,7 +233,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		log.debug("bind service");
 
 		List<ServerAddress> hosts = serviceInstance.getHosts();
-		Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, hosts);
+		Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, hosts, plan);
 
 		return new ServiceInstanceBinding(bindingId, serviceInstance.getId(), credentials, null);
 	}
@@ -313,14 +310,14 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	 */
 	@Override
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
-			ServerAddress host) throws ServiceBrokerException {
+			ServerAddress host, Plan plan) throws ServiceBrokerException {
 		log.warn("de.evoila.cf.broker.custom.RabbitMqBindingService#createCredentials( java.lang.String, "
 				+ "de.evoila.cf.broker.model.ServiceInstance, de.evoila.cf.broker.model.ServerAddress) "
 				+ "was used instead of de.evoila.cf.broker.custom.RabbitMqBindingService#createCredentials( "
 				+ "java.lang.String, de.evoila.cf.broker.model.ServiceInstance, "
 				+ "java.util.List<de.evoila.cf.broker.model.ServerAddress>)");
 
-		return createCredentials(bindingId, serviceInstance, Lists.newArrayList(host));
+		return createCredentials(bindingId, serviceInstance, Lists.newArrayList(host), plan);
 	}
 
 	/*
