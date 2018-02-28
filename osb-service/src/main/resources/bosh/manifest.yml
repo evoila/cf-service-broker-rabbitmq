@@ -1,0 +1,111 @@
+---
+name: rabbitmq
+
+releases:
+- name: osb-rabbitmq
+  version: latest
+- name: osb-haproxy
+  version: latest
+- name: osb-monitoring
+  version: latest
+
+update:
+  canaries: 1
+  canary_watch_time: 15000-30000
+  update_watch_time: 15000-30000
+  max_in_flight: 2
+
+stemcells:
+- alias: default
+  os: ubuntu-trusty
+  version: 3468.13
+
+instance_groups:
+- name: rmq
+  instances: 3
+  vm_type: default
+  persistent_disk_type: default
+  stemcell: default
+  networks:
+  - name: default
+  jobs:
+  - name: rabbitmq-server
+    release: osb-rabbitmq
+  - name: node_exporter
+    release: osb-monitoring
+  - name: rabbitmq_exporter
+    release: osb-monitoring
+  properties:
+    rabbitmq_exporter:
+      user: admin
+      password: admin
+    rabbitmq-server:
+      plugins:
+      - rabbitmq_management
+      - rabbitmq_mqtt
+      - rabbitmq_stomp
+      ports:
+      - 5672
+      - 5671
+      - 1883
+      - 8883
+      - 61613
+      - 61614
+      - 15672
+      - 15674
+      administrators:
+        management:
+          username: admin
+          password: admin
+        broker:
+          username: admin
+          password: admin
+      cookie: "rabbit-cluster:local"
+      cluster_partition_handling: ignore
+      disk_alarm_threshold: "{mem_relative,0.01}"
+
+- name: haproxy
+  instances: 1
+  vm_type: default
+  stemcell: default
+  networks:
+  - name: default
+  jobs:
+  - name: haproxy
+    release: osb-haproxy
+  - name: node_exporter
+    release: osb-monitoring
+  - name: haproxy_exporter
+    release: osb-monitoring
+  properties:
+    ha_proxy:
+      binding_ip: 0.0.0.0
+      disable_http: true
+      backend_port: 5672
+      stats_enable: true
+      stats_user: admin
+      stats_password: admin
+      tcp:
+        - name: rabbitmq
+          balance: roundrobin
+          port: 5672
+
+- name: smoke-tests
+  lifecycle: errand
+  instances: 0
+  vm_type: default
+  stemcell: default
+  networks:
+  - name: default
+  jobs:
+  - release: osb-rabbitmq
+    name: smoke-tests
+  properties:
+    rabbitmq:
+      smoke-tests:
+        target:
+          port:     5432
+          username: admin
+          password: admin
+        backend:
+          port:     6432
