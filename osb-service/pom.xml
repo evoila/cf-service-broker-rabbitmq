@@ -4,12 +4,12 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>de.evoila.cf.broker</groupId>
-		<artifactId>custom-parent</artifactId>
-		<version>1.2.0</version>
-		<relativePath>../osb-core/custom-parent</relativePath>
-		
+        	<groupId>de.evoila.cf.broker</groupId>
+        	<artifactId>repo-parent</artifactId>
+       		<relativePath>../</relativePath>
+        	<version>1.2.0</version>
 	</parent>
+
 	<artifactId>cf-service-broker-rabbitmq</artifactId>
 	<packaging>jar</packaging>
 	<name>ssb-rabbitmq</name>
