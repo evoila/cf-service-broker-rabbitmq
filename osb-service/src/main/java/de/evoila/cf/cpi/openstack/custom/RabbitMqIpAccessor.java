@@ -5,6 +5,7 @@ package de.evoila.cf.cpi.openstack.custom;
 
 import java.util.List;
 
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMappingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Primary;
@@ -30,7 +31,7 @@ public class RabbitMqIpAccessor extends CustomIpAccessor {
 	private HeatFluent heatFluent;
 
 	@Autowired
-	private StackMappingRepository stackMappingRepo;
+	private ClusterStackMappingRepository stackMappingRepo;
 
 	@Autowired
 	private DefaultIpAccessor defaultIpAccessor;

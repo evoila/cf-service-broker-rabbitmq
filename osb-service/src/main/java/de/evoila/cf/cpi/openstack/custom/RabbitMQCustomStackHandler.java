@@ -45,7 +45,7 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 	private final Logger log = LoggerFactory.getLogger(RabbitMQCustomStackHandler.class);
 
 	@Autowired
-	private StackMappingRepository stackMappingRepo;
+	private ClusterStackMappingRepository stackMappingRepo;
 	
 	@Autowired
 	private OpenstackBean openstackBean;
