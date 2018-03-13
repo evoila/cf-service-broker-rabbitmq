@@ -3,20 +3,14 @@
  */
 package de.evoila.cf.broker.custom;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeoutException;
-
-import javax.annotation.PostConstruct;
-
-import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
+import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
+import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
+import de.evoila.cf.broker.exception.ServiceBrokerException;
+import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
+import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
+import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,19 +22,13 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import de.evoila.cf.broker.bean.ExistingEndpointBean;
-import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
-import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.model.Plan;
-import de.evoila.cf.broker.model.Platform;
-import de.evoila.cf.broker.model.RouteBinding;
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.model.ServiceInstanceBinding;
-import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
-import de.evoila.cf.broker.service.impl.BindingServiceImpl;
-import jersey.repackaged.com.google.common.collect.Lists;
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.security.SecureRandom;
+import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Johannes Hiemer.
@@ -113,10 +101,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	}
 
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
-			List<ServerAddress> hosts) throws ServiceBrokerException {
-
-		
-		Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getPlanId());
+			List<ServerAddress> hosts, Plan plan) throws ServiceBrokerException {
 		
 		ServerAddress amqpHost = null, apiHost = null;
 		for (ServerAddress serverAddress : hosts) {
@@ -213,7 +198,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 		log.debug("bind service key");
 
-		Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, externalAddresses);
+		Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, externalAddresses, plan);
 
 		ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(),
 				credentials, null);
@@ -236,7 +221,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		log.debug("bind service");
 
 		List<ServerAddress> hosts = serviceInstance.getHosts();
-		Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, hosts);
+		Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, hosts, plan);
 
 		return new ServiceInstanceBinding(bindingId, serviceInstance.getId(), credentials, null);
 	}
@@ -313,14 +298,17 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	 */
 	@Override
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
-			ServerAddress host) throws ServiceBrokerException {
+			ServerAddress host, Plan plan) throws ServiceBrokerException {
 		log.warn("de.evoila.cf.broker.custom.RabbitMqBindingService#createCredentials( java.lang.String, "
 				+ "de.evoila.cf.broker.model.ServiceInstance, de.evoila.cf.broker.model.ServerAddress) "
 				+ "was used instead of de.evoila.cf.broker.custom.RabbitMqBindingService#createCredentials( "
 				+ "java.lang.String, de.evoila.cf.broker.model.ServiceInstance, "
 				+ "java.util.List<de.evoila.cf.broker.model.ServerAddress>)");
 
-		return createCredentials(bindingId, serviceInstance, Lists.newArrayList(host));
+		List<ServerAddress> hosts = new ArrayList<>();
+		hosts.add(host);
+
+		return createCredentials(bindingId, serviceInstance, hosts, plan);
 	}
 
 	/*

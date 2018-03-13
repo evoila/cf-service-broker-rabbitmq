@@ -3,13 +3,13 @@
  */
 package de.evoila.cf.cpi.openstack.custom;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-
+import de.evoila.cf.broker.bean.OpenstackBean;
+import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
+import de.evoila.cf.broker.exception.PlatformException;
+import de.evoila.cf.broker.model.ServerAddress;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMappingRepository;
+import de.evoila.cf.cpi.openstack.custom.cluster.ClusterStackHandler;
 import org.openstack4j.model.heat.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.bean.OpenstackBean;
-import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
-import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
-import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
-import de.evoila.cf.cpi.openstack.custom.cluster.ClusterStackHandler;
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Christian Mueller, evoila
@@ -45,7 +43,7 @@ public class RabbitMQCustomStackHandler extends ClusterStackHandler {
 	private final Logger log = LoggerFactory.getLogger(RabbitMQCustomStackHandler.class);
 
 	@Autowired
-	private StackMappingRepository stackMappingRepo;
+	private ClusterStackMappingRepository stackMappingRepo;
 	
 	@Autowired
 	private OpenstackBean openstackBean;
