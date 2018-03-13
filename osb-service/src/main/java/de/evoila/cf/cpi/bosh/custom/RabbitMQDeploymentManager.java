@@ -1,18 +1,12 @@
 package de.evoila.cf.cpi.bosh.custom;
 
 import de.evoila.cf.broker.bean.BoshProperties;
-import de.evoila.cf.broker.model.Plan;
-import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.cpi.bosh.BoshPlatformService;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
-import io.bosh.client.deployments.Deployment;
-import io.bosh.client.vms.Vm;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class RabbitMQDeploymentManager extends DeploymentManager {
-
+    public static final String INSTANCE_GROUP = "rabbitmq";
+    public static final String DATA_PATH = "data_path";
+    public static final String PORT = "port";
 
     public RabbitMQDeploymentManager(BoshProperties boshProperties) {
         super(boshProperties);

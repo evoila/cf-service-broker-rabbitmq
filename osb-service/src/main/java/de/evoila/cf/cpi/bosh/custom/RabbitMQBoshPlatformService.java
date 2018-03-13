@@ -9,7 +9,6 @@ import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.CatalogService;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.bosh.BoshPlatformService;
-import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import io.bosh.client.deployments.Deployment;
 import io.bosh.client.vms.Vm;
 import org.springframework.stereotype.Service;
@@ -31,8 +30,8 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
     @Override
     protected void updateHosts (ServiceInstance in,Plan plan,Deployment deployment) {
         final int port;
-        if (plan.getMetadata().containsKey(BoshPlatformService.PORT)) {
-            port = (int) plan.getMetadata().get(BoshPlatformService.PORT);
+        if (plan.getMetadata().containsKey(RabbitMQDeploymentManager.PORT)) {
+            port = (int) plan.getMetadata().get(RabbitMQDeploymentManager.PORT);
         } else {
             port = defaultPort;
         }
