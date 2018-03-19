@@ -3,9 +3,6 @@
  */
 package de.evoila;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,8 +15,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.util.Assert;
 
-import de.evoila.cf.cpi.custom.props.DomainBasedCustomPropertyHandler;
-import de.evoila.cf.cpi.custom.props.RabbitMQCustomPropertyHandler;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 
@@ -32,11 +29,6 @@ import de.evoila.cf.cpi.custom.props.RabbitMQCustomPropertyHandler;
 @EnableMongoRepositories(basePackages={"de.evoila.cf.cpi.openstack.custom", "de.evoila.cf.broker.persistence.mongodb.repository"})
 @EnableAutoConfiguration(exclude = {RabbitAutoConfiguration.class, BusAutoConfiguration.class})
 public class Application {
-
-	@Bean
-	public DomainBasedCustomPropertyHandler domainPropertyHandler() {
-		return new RabbitMQCustomPropertyHandler();
-	}
 
 	@Bean(name = "customProperties")
 	public Map<String, String> customProperties() {

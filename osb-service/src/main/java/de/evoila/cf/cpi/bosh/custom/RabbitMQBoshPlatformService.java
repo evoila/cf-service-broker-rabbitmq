@@ -1,6 +1,7 @@
 package de.evoila.cf.cpi.bosh.custom;
 
 import de.evoila.cf.broker.bean.BoshProperties;
+import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.DashboardClient;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.ServerAddress;
@@ -29,13 +30,6 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
 
     @Override
     protected void updateHosts (ServiceInstance in,Plan plan,Deployment deployment) {
-        final int port;
-        if (plan.getMetadata().containsKey(RabbitMQDeploymentManager.PORT)) {
-            port = (int) plan.getMetadata().get(RabbitMQDeploymentManager.PORT);
-        } else {
-            port = defaultPort;
-        }
-
         List<Vm> vms = connection.connection().vms().listDetails(
               BoshPlatformService.DEPLOYMENT_NAME_PREFIX + in.getId()).toBlocking().first();
         if (in.getHosts() == null)
@@ -44,7 +38,10 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
         in.getHosts().clear();
 
         vms.forEach(vm -> {
-            in.getHosts().add(new ServerAddress("Host-" + vm.getIndex(),vm.getIps().get(0),port));
+            in.getHosts().add(new ServerAddress("Host-" + vm.getIndex(),vm.getIps().get(0), defaultPort));
         });
     }
+
+    @Override
+    public void postDeleteInstance(ServiceInstance serviceInstance) throws PlatformException { }
 }
