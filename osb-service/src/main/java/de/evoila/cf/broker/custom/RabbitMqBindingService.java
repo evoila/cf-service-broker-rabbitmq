@@ -8,7 +8,6 @@ import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
-import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
 import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import org.apache.commons.codec.binary.Base64;
@@ -79,9 +78,6 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 	private ServiceDefinitionRepository serviceDefinitionRepository;
 
 	@Autowired
-	private StackMappingRepository stackMappingRepository;
-	
-	@Autowired
 	private ExistingEndpointBean existingEndpointBean;
 	
 	@PostConstruct
@@ -131,18 +127,9 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 		String apiHostAddress = apiHost.getIp();
 		int apiPort = apiHost.getPort();
-		
-		String adminUsername = getAdminUser(serviceInstance);
-		String adminPassword = getAdminPassword(serviceInstance);
-		
-		if(plan.getPlatform().equals(Platform.OPENSTACK)) {
-			adminPassword = serviceInstance.getId();
-			adminUsername = serviceInstance.getId();
-		}
 
-		
-		
-		rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(adminUsername, adminPassword, userName, password, apiHostAddress, apiPort,
+		rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(serviceInstance.getUsername(),
+                serviceInstance.getPassword(), userName, password, apiHostAddress, apiPort,
 				vhostName );
 
 		String rabbitMqUrl = String.format(URL_PATTERN, userName, password, amqpHostAddress, amqpHost.getPort(),
@@ -168,20 +155,6 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		credentials.put("vhost", vhostName);
 		
 		return credentials;
-	}
-
-	private String getAdminPassword(ServiceInstance serviceInstance) {
-		if(stackMappingRepository.exists(serviceInstance.getId())){
-			return serviceInstance.getId();
-		}
-		return (this.password == null || this.password.equals("")) ? serviceInstance.getId() : this.password;
-	}
-
-	private String getAdminUser(ServiceInstance serviceInstance) {
-		if(stackMappingRepository.exists(serviceInstance.getId())){
-			return serviceInstance.getId();
-		}
-		return (this.username == null || this.username.equals("")) ? serviceInstance.getId() : this.username;
 	}
 
 	/*
@@ -251,7 +224,8 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 		
 		
 
-		executeRequest(getAmqpApi(apiHost.getIp(), apiHost.getPort()) + "/users/" + binding.getId(), HttpMethod.DELETE, getAdminUser(serviceInstance), getAdminPassword(serviceInstance),
+		executeRequest(getAmqpApi(apiHost.getIp(), apiHost.getPort()) + "/users/" + binding.getId(), HttpMethod.DELETE,
+                serviceInstance.getUsername(), serviceInstance.getPassword(),
 				null);
 	}
 
