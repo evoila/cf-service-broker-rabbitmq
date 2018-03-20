@@ -23,7 +23,6 @@ import java.util.Map;
  * @author Johannes Hiemer.
  *
  */
-
 @RefreshScope
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = { RabbitAutoConfiguration.class, BusAutoConfiguration.class })
