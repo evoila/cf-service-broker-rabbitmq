@@ -26,8 +26,7 @@ import java.util.Map;
 
 @RefreshScope
 @SpringBootApplication
-@EnableMongoRepositories(basePackages={"de.evoila.cf.cpi.openstack.custom", "de.evoila.cf.broker.persistence.mongodb.repository"})
-@EnableAutoConfiguration(exclude = {RabbitAutoConfiguration.class, BusAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = { RabbitAutoConfiguration.class, BusAutoConfiguration.class })
 public class Application {
 
 	@Bean(name = "customProperties")

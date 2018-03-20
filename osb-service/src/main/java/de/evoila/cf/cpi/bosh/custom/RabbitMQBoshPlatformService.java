@@ -12,6 +12,7 @@ import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.bosh.BoshPlatformService;
 import io.bosh.client.deployments.Deployment;
 import io.bosh.client.vms.Vm;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@ConditionalOnBean(BoshProperties.class)
 public class RabbitMQBoshPlatformService extends BoshPlatformService {
     private final int defaultPort = 5672;
 
