@@ -3,76 +3,77 @@
  */
 package de.evoila.cf.broker.custom.rabbitmq;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
+import de.evoila.cf.broker.model.ServerAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Johannes Hiemer
  *
  */
-public class RabbitMqService implements CustomExistingServiceConnection {
+public class RabbitMqService {
 
-	private String host;
+    private static String SCHEME = "http";
 
-	private int port;
+    private static int ADMIN_PORT = 15672;
+
+    private ServerAddress serverAddress;
+
+    private String username;
+
+    private String password;
+
+    private Logger log = LoggerFactory.getLogger(getClass());
 
 	private Connection connection;
 
-	private String vhost;
-
-	private String username;
-
-	private String password;
-
 	public boolean isConnected() {
-		if (connection == null)
-			return false;
-		return connection.isOpen();
+	    return connection != null && connection.isOpen();
 	}
 
-	public void createConnection(String host, int port, String vhostName, String userName, String password)
-			throws IOException, TimeoutException {
-		ConnectionFactory connectionFactory = new ConnectionFactory();
-		connectionFactory.setHost(host);
-		connectionFactory.setPort(port);
-		connectionFactory.setVirtualHost(vhostName);
-		connectionFactory.setUsername(userName);
-		connectionFactory.setPassword(password);
+	public boolean createConnection(String username, String password, String vhostName, List<ServerAddress> serverAddresses) {
+	    this.serverAddress = serverAddresses.get(0);
+	    this.username = username;
+        this.password = password;
+	    try {
+            ConnectionFactory connectionFactory = new ConnectionFactory();
+            connectionFactory.setHost(serverAddress.getIp());
+            connectionFactory.setPort(serverAddress.getPort());
+            connectionFactory.setVirtualHost(vhostName);
+            connectionFactory.setUsername(username);
+            connectionFactory.setPassword(password);
 
-		this.host = host;
-		this.port = port;
-		this.vhost = vhostName;
-		this.username = userName;
-		this.password = password;
-
-		connection = connectionFactory.newConnection();
+            connection = connectionFactory.newConnection();
+        } catch (IOException | TimeoutException e) {
+            log.info("Could not establish connection", e);
+            return false;
+        }
+        return true;
 	}
 
-	public String getHost() {
-		return host;
-	}
+	public String getAdminApi() {
+	    return SCHEME + "://" + this.serverAddress.getIp() + ":" +  ADMIN_PORT + "/api";
+    }
 
-	public int getPort() {
-		return port;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public Connection rabbitmqClient() {
-		return connection;
-	}
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-	public String getVhost() {
-		return vhost;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public String getUsername() {
-		return username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

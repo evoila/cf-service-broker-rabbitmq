@@ -21,7 +21,7 @@ stemcells:
   version: 3468.13
 
 instance_groups:
-- name: rmq
+- name: rabbitmq
   instances: 3
   vm_type: default
   persistent_disk_type: default
@@ -38,7 +38,6 @@ instance_groups:
   properties:
     rabbitmq_exporter:
       user: admin
-      password: admin
     rabbitmq-server:
       plugins:
       - rabbitmq_management
@@ -56,10 +55,6 @@ instance_groups:
       administrators:
         management:
           username: admin
-          password: admin
-        broker:
-          username: admin
-          password: admin
       cookie: "rabbit-cluster:local"
       cluster_partition_handling: ignore
       disk_alarm_threshold: "{mem_relative,0.01}"
@@ -104,8 +99,8 @@ instance_groups:
     rabbitmq:
       smoke-tests:
         target:
-          port:     5432
+          port: 5432
           username: admin
           password: admin
         backend:
-          port:     6432
+          port: 6432

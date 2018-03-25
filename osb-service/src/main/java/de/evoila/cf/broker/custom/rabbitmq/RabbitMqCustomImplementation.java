@@ -3,13 +3,10 @@
  */
 package de.evoila.cf.broker.custom.rabbitmq;
 
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-
+import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.model.Plan;
+import de.evoila.cf.broker.model.Platform;
+import de.evoila.cf.broker.model.ServiceInstance;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,10 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import de.evoila.cf.broker.bean.ExistingEndpointBean;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.cpi.existing.CustomExistingService;
-import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 
 
 /**
@@ -32,129 +27,60 @@ import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
  *
  */
 @Service
-public class RabbitMqCustomImplementation implements CustomExistingService {
-	
-	private static final String DOUBLE_URL_VALUE = "%d";
+public class RabbitMqCustomImplementation {
 
-	private static final String STRING_URL_VALUE = "%s";
+    private Logger log = LoggerFactory.getLogger(RabbitMqCustomImplementation.class);
 
-	private static final String PATH_SEPARATOR = "/";
-
-	private static final String AMQP = "amqp://";
-
-	private static final String USER_PASSWORD_SEPARATOR = ":";
-
-	private static final String CREDENTIAL_IP_SEPARATOR = "@";
-
-	private static final String HTTP = "http://";
-
-	private static final String API = "/api";
-
-	private static final String IP_PORT_SEPARATOR = ":";
-
-	private static final String AMQP_PORT_KEY = "default";
-
-	private static final String API_PORT_KEY = "user";
-
-	private static final String URL_PATTERN = AMQP + STRING_URL_VALUE + USER_PASSWORD_SEPARATOR + STRING_URL_VALUE
-			+ CREDENTIAL_IP_SEPARATOR + STRING_URL_VALUE + IP_PORT_SEPARATOR + DOUBLE_URL_VALUE + PATH_SEPARATOR
-			+ STRING_URL_VALUE;
-
-	private static final String API_URL_PATTERN = HTTP + STRING_URL_VALUE + USER_PASSWORD_SEPARATOR + STRING_URL_VALUE
-			+ CREDENTIAL_IP_SEPARATOR + STRING_URL_VALUE + IP_PORT_SEPARATOR + DOUBLE_URL_VALUE;
-
-	private int adminPort;
-	
 	@Autowired
 	private ExistingEndpointBean existingEndpointBean;
-	
-	private Logger log = LoggerFactory.getLogger(RabbitMqCustomImplementation.class);
-	
-	@PostConstruct
-	private void initValues() {
-		adminPort = existingEndpointBean.getAdminport();
-	}
-	
-	/* (non-Javadoc)
-	 * @see de.evoila.cf.cpi.existing.CustomExistingService#connection(java.lang.String, int, java.lang.String, java.lang.String, java.lang.String)
-	 */
 
-	@Override
-	public CustomExistingServiceConnection connection(List<String> host, int port, String database, String username,
-			String password) throws Exception {
-		
-		log.info("Opening connection to " + host + ":" + port);
+	public RabbitMqService connection(ServiceInstance serviceInstance, Plan plan) {
 		RabbitMqService rabbitMqService = new RabbitMqService();
-		
-		try{
-		rabbitMqService.createConnection(host.get(0), port, database, username,
-				password);
-		} catch (UnknownHostException e){
-			log.info("Could not establish connection", e);
-			throw new ServiceBrokerException("Could not establish connection", e);
-		}
-		return rabbitMqService;
-	}
-	
-	// never used locally
-	/*
-	private RabbitMqService connection(ServiceInstance serviceInstance, String vhostName, String userName,
-			String password) throws IOException, TimeoutException {
-		ServerAddress host = serviceInstance.getHosts().get(0);
-		log.info("Opening connection to " + host.getIp() + host.getPort());
-		RabbitMqService rabbitMqService = new RabbitMqService();
-		rabbitMqService.createConnection(host.getIp(), host.getPort(), vhostName, userName,
-				password);
-		return rabbitMqService;
-	}
-	*/
 
-	/* (non-Javadoc)
-	 * @see de.evoila.cf.cpi.existing.CustomExistingService#bindRoleToInstanceWithPassword(de.evoila.cf.cpi.existing.CustomExistingServiceConnection, java.lang.String, java.lang.String, java.lang.String)
-	 */
-	@Override
-	public void bindRoleToInstanceWithPassword(CustomExistingServiceConnection connection, String database,
-			String username, String password) throws Exception {
-		// in rabbitmq not necessary.
+        if(plan.getPlatform() == Platform.BOSH)
+            rabbitMqService.createConnection(serviceInstance.getUsername(), serviceInstance.getPassword(),
+                    "admin", serviceInstance.getHosts());
+        else if (plan.getPlatform() == Platform.EXISTING_SERVICE)
+            rabbitMqService.createConnection(existingEndpointBean.getUsername(), existingEndpointBean.getPassword(),
+                    existingEndpointBean.getDatabase(), existingEndpointBean.getHosts());
+
+        return  rabbitMqService;
 	}
 
-	
-	public void addUserToVHostAndSetPermissions(String adminname, String adminpassword, String newUserName, String newUserPassword, String amqpHostAddress, int port, String vhostName) {
+	public void addUserToVHostAndSetPermissions(RabbitMqService rabbitMqService,
+                                                String newUserName, String newUserPassword, String vhostName) {
 
-		executeRequest(getAmqpApi(amqpHostAddress, port) + "/users/" + newUserName, HttpMethod.PUT, adminname, adminpassword,
-                "{\"password\":\"" + newUserPassword + "\", \"tags\" : \"policymaker\"}");
+		executeRequest(rabbitMqService.getAdminApi() + "/users/" + newUserName, HttpMethod.PUT, rabbitMqService.getUsername(),
+                rabbitMqService.getPassword(),"{\"password\":\"" + newUserPassword + "\", \"tags\" : \"policymaker\"}");
 
-		executeRequest(getAmqpApi(amqpHostAddress, port) + "/permissions/" + vhostName + PATH_SEPARATOR + newUserName,
-				HttpMethod.PUT, adminname, adminpassword, "{\"configure\":\".*\",\"write\":\".*\",\"read\":\".*\"}");
-		
-		setHaPolicy(amqpHostAddress,port,newUserName,newUserPassword,vhostName);
+		executeRequest(rabbitMqService.getAdminApi() + "/permissions/" + vhostName + "/" + newUserName,
+				HttpMethod.PUT, rabbitMqService.getUsername(),
+                rabbitMqService.getPassword(), "{\"configure\":\".*\",\"write\":\".*\",\"read\":\".*\"}");
+
+		//setHaPolicy(rabbitMqService, rabbitMqService.getUsername(), rabbitMqService.getPassword(), vhostName);
 	}
-	
-	
-	private String getAmqpApi(String amqpHostAddress, int port) {
-		return HTTP + amqpHostAddress + ":" + port + API;
+
+	public void removeUser(RabbitMqService rabbitMqService, String username) {
+        executeRequest(rabbitMqService.getAdminApi() + "/users/" + username, HttpMethod.DELETE, rabbitMqService.getUsername(),
+                rabbitMqService.getPassword(), null);
+    }
+
+	public void removeVHosts(RabbitMqService rabbitMqService, String vhostName) {
+        executeRequest(rabbitMqService.getAdminApi() + "/vhosts/" + vhostName, HttpMethod.DELETE, rabbitMqService.getUsername(),
+                rabbitMqService.getPassword(), null);
 	}
+
+	public void createVHosts(RabbitMqService rabbitMqService, String vhostName) {
+        executeRequest(rabbitMqService.getAdminApi() + "/vhosts/" + vhostName, HttpMethod.PUT, rabbitMqService.getUsername(),
+                rabbitMqService.getPassword(), null);
+    }
 	
-	public void removeVHosts(String amqpHostAddress, int port, String username, 
-			String password, String vhostName) {
-		String payload = null;
-		executeRequest(getAmqpApi(amqpHostAddress, port) + "/vhosts/" + vhostName, HttpMethod.DELETE, username, password, payload);
-	}
-	
-	public void createVHosts(String amqpHostAddress, int port, String username, 
-			String password, String vhostName) {
-		String payload = null;
-		executeRequest(getAmqpApi(amqpHostAddress, port) + "/vhosts/" + vhostName, HttpMethod.PUT, username, password, payload);
-	}
-	
-	
-	public void setHaPolicy(String amqpHostAddress, int port, String username, 
-			String password, String vhostName) {
+	public void setHaPolicy(RabbitMqService rabbitMqService, String username, String password, String vhostName) {
 		String payload = "{\"pattern\": \".*\",\"apply-to\": \"all\",\"definition\": {\"ha-mode\": \"all\",\"ha-sync-mode\": \"automatic\"},\"priority\": 0}";
-		executeRequest(getAmqpApi(amqpHostAddress, port) + "/policies/" + vhostName +"/ha-"+vhostName, HttpMethod.PUT, username, password, payload);
+		executeRequest(rabbitMqService.getAdminApi() + "/policies/" + vhostName +"/ha-"+vhostName,
+                HttpMethod.PUT, username, password, payload);
 	}
 
-	
 	private void executeRequest(String url, HttpMethod method, String username, String password, String payload) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Authorization", buildAuthHeader(username, password));
@@ -163,15 +89,14 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 
 		log.info("Requesting: " + url + " and method " + method.toString());
 
-		HttpEntity<String> entity = null;
+		HttpEntity<String> entity;
 		if (payload == null)
-			entity = new HttpEntity<String>(headers);
+			entity = new HttpEntity<>(headers);
 		else
-			entity = new HttpEntity<String>(payload, headers);
+			entity = new HttpEntity<>(payload, headers);
 
 		new RestTemplate().exchange(url, method, entity, String.class);
 	}
-
 
 	private String buildAuthHeader(String username, String password) {
 		String auth = username + ":" + password;
@@ -179,10 +104,5 @@ public class RabbitMqCustomImplementation implements CustomExistingService {
 
 		return "Basic " + new String(encodedAuth);
 	}
-	
-	public void setAdminPort(int adminPort) {
-		this.adminPort = adminPort;
-	}
 
-	
 }
