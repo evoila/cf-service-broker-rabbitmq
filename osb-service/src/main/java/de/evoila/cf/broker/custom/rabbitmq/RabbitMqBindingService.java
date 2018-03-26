@@ -49,7 +49,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {
         throw new UnsupportedOperationException();
     }
-    
+
     @Override
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) {
