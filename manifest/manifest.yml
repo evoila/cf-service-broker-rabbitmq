@@ -13,10 +13,10 @@ releases:
   url: https://s3.eu-central-1.amazonaws.com/monitoring-boshrelease-pipeline-ev/osb-monitoring-0.0.3.tgz
   name: osb-monitoring
   version: 0.0.3
-- sha1: e5d6246a08aac05287774c82d7a88bd3d40b5b05
-  url: https://s3.eu-central-1.amazonaws.com/rabbitmq-boshrelease-pipeline-ev/osb-rabbitmq-1.0.0.tgz
-  name: osb-rabbitmq
-  version: 1.0.0
+- sha1: b9b6af3b7c17b89c88e9f3ce85d3bae8c237c412
+  url: https://s3.eu-central-1.amazonaws.com/rabbitmq-boshrelease-pipeline-ev/osb-bosh-rabbitmq-0.0.2.tgz
+  name: osb-bosh-rabbitmq
+  version: 0.0.2
 update:
   canaries: 1
   canary_watch_time: 15000-30000
