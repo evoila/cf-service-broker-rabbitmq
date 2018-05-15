@@ -41,7 +41,7 @@ public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 	}
 
 	@Override
-    public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, String> parameters) {
+    public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> parameters) {
         String username = usernameRandomString.nextString();
         String password = passwordRandomString.nextString();
 
