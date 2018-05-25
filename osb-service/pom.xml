@@ -10,7 +10,7 @@
         	<version>1.2.0</version>
 	</parent>
 
-	<artifactId>cf-service-broker-rabbitmq</artifactId>
+	<artifactId>osb-rabbitmq</artifactId>
 	<packaging>jar</packaging>
 	<name>ssb-rabbitmq</name>
         <version>1.2.0</version>
