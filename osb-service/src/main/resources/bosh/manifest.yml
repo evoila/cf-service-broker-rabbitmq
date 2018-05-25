@@ -1,12 +1,12 @@
 ---
-name: rabbitmq
+name: osb-rabbitmq
 
 releases:
-- name: osb-rabbitmq
+- name: osb-bosh-rabbitmq
   version: latest
-- name: osb-haproxy
+- name: osb-bosh-haproxy
   version: latest
-- name: osb-monitoring
+- name: osb-bosh-monitoring
   version: latest
 
 update:
@@ -18,23 +18,25 @@ update:
 stemcells:
 - alias: default
   os: ubuntu-trusty
-  version: 3468.13
+  version: latest
 
 instance_groups:
 - name: rabbitmq
   instances: 3
-  vm_type: default
-  persistent_disk_type: default
+  vm_type: minimal
   stemcell: default
   networks:
-  - name: default
+  - name: service
+  azs:
+  - z1
+  persistent_disk_type: 10GB
   jobs:
   - name: rabbitmq-server
-    release: osb-rabbitmq
+    release: osb-bosh-rabbitmq
   - name: node_exporter
-    release: osb-monitoring
+    release: osb-bosh-monitoring
   - name: rabbitmq_exporter
-    release: osb-monitoring
+    release: osb-bosh-monitoring
   properties:
     rabbitmq_exporter:
       user: admin
@@ -61,17 +63,19 @@ instance_groups:
 
 - name: haproxy
   instances: 1
-  vm_type: default
+  vm_type: minimal
   stemcell: default
   networks:
-  - name: default
+  - name: service
+  azs:
+  - z1
   jobs:
   - name: haproxy
-    release: osb-haproxy
+    release: osb-bosh-haproxy
   - name: node_exporter
-    release: osb-monitoring
+    release: osb-bosh-monitoring
   - name: haproxy_exporter
-    release: osb-monitoring
+    release: osb-bosh-monitoring
   properties:
     ha_proxy:
       binding_ip: 0.0.0.0
@@ -88,13 +92,15 @@ instance_groups:
 - name: smoke-tests
   lifecycle: errand
   instances: 0
-  vm_type: default
+  vm_type: minimal
   stemcell: default
   networks:
-  - name: default
+  - name: service
+  azs:
+  - z1
   jobs:
-  - release: osb-rabbitmq
-    name: smoke-tests
+  - name: smoke-tests
+    release: osb-bosh-rabbitmq
   properties:
     rabbitmq:
       smoke-tests:
