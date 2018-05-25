@@ -40,7 +40,10 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         rabbitmqExporter.put("password", password);
 
         HashMap<String, Object> administrators = (HashMap<String, Object>) rabbitmqServer.get("administrators");
-        administrators.put("password", password);
+        HashMap<String, Object> mgmtAdmins = (HashMap<String, Object>) administrators.get("management");
+        HashMap<String, Object> brokerAdmins = (HashMap<String, Object>) administrators.get("broker");
+        mgmtAdmins.put("password", password);
+        brokerAdmins.put("password", password);
 
         this.updateInstanceGroupConfiguration(manifest, plan);
     }

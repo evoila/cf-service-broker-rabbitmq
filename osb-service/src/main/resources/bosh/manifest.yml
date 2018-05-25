@@ -57,6 +57,8 @@ instance_groups:
       administrators:
         management:
           username: admin
+        broker:
+          username: admin
       cookie: "rabbit-cluster:local"
       cluster_partition_handling: ignore
       disk_alarm_threshold: "{mem_relative,0.01}"
@@ -85,9 +87,9 @@ instance_groups:
       stats_user: admin
       stats_password: admin
       tcp:
-        - name: rabbitmq
-          balance: roundrobin
-          port: 5672
+      - name: rabbitmq
+        balance: roundrobin
+        port: 5672
 
 - name: smoke-tests
   lifecycle: errand
