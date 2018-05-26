@@ -82,7 +82,6 @@ instance_groups:
     ha_proxy:
       binding_ip: 0.0.0.0
       disable_http: true
-      backend_port: 5672
       stats_enable: true
       stats_user: admin
       stats_password: admin
@@ -90,6 +89,9 @@ instance_groups:
       - name: rabbitmq
         balance: roundrobin
         port: 5672
+      - name: rabbitmq-mgmt
+        balance: roundrobin
+        port: 15672
 
 - name: smoke-tests
   lifecycle: errand

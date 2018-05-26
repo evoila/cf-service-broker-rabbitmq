@@ -44,6 +44,10 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         HashMap<String, Object> brokerAdmins = (HashMap<String, Object>) administrators.get("broker");
         mgmtAdmins.put("password", password);
         brokerAdmins.put("password", password);
+        brokerAdmins.put("vhost", serviceInstance.getId());
+
+        serviceInstance.setUsername("admin");
+        serviceInstance.setPassword(password);
 
         this.updateInstanceGroupConfiguration(manifest, plan);
     }

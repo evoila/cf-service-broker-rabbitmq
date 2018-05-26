@@ -99,7 +99,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
                         plan.getMetadata().getIngressInstanceGroup());
 
             rabbitMqService.createConnection(serviceInstance.getUsername(), serviceInstance.getPassword(),
-                    "admin", serverAddresses);
+                    "/", serverAddresses);
         } else if (plan.getPlatform() == Platform.EXISTING_SERVICE)
             rabbitMqService.createConnection(existingEndpointBean.getUsername(), existingEndpointBean.getPassword(),
                     existingEndpointBean.getDatabase(), existingEndpointBean.getHosts());
