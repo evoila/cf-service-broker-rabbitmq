@@ -10,6 +10,7 @@ import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import io.bosh.client.deployments.Deployment;
 import io.bosh.client.vms.Vm;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,10 +22,11 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
 
     private final int defaultPort = 5672;
 
-    RabbitMQBoshPlatformService(PlatformRepository repository,CatalogService catalogService,ServicePortAvailabilityVerifier availabilityVerifier,BoshProperties boshProperties,Optional<DashboardClient> dashboardClient) {
+    RabbitMQBoshPlatformService(PlatformRepository repository, CatalogService catalogService, ServicePortAvailabilityVerifier availabilityVerifier,
+                                BoshProperties boshProperties, Optional<DashboardClient> dashboardClient, Environment environment) {
         super(repository,catalogService,
               availabilityVerifier,boshProperties,
-              dashboardClient,new RabbitMQDeploymentManager(boshProperties));
+              dashboardClient, new RabbitMQDeploymentManager(boshProperties, environment));
     }
 
     @Override

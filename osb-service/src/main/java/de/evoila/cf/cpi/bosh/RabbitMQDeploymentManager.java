@@ -6,6 +6,7 @@ import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
+import org.springframework.core.env.Environment;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,8 +16,8 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
 
     private RandomString randomStringPassword = new RandomString(15);
 
-    public RabbitMQDeploymentManager(BoshProperties boshProperties) {
-        super(boshProperties);
+    public RabbitMQDeploymentManager(BoshProperties boshProperties, Environment environment) {
+        super(boshProperties, environment);
     }
 
     @Override
