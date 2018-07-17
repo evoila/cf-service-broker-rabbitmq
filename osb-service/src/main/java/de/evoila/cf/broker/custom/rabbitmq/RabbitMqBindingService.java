@@ -30,6 +30,8 @@ public class RabbitMqBindingService extends BindingServiceImpl {
     private static String URI = "uri";
     private static String USERNAME = "user";
     private static String PASSWORD = "password";
+    private static String HOST = "host";
+    private static String PORT = "port";
     private static String VHOST = "vhost";
 
 	private Logger log = LoggerFactory.getLogger(getClass());
@@ -68,11 +70,13 @@ public class RabbitMqBindingService extends BindingServiceImpl {
         if (host != null)
             endpoint = host.getIp() + ":" + host.getPort();
 
-        String dbURL = String.format("rabbitmq://%s:%s@%s/%s", username, password, endpoint,
+        String dbURL = String.format("amqp://%s:%s@%s/%s", username, password, endpoint,
                 vHostName);
 
         Map<String, Object> credentials = new HashMap<>();
         credentials.put(URI, dbURL);
+        credentials.put(HOST, host.getIp());
+        credentials.put(PORT, host.getPort());
         credentials.put(USERNAME, username);
         credentials.put(PASSWORD, password);
         credentials.put(VHOST, vHostName);
