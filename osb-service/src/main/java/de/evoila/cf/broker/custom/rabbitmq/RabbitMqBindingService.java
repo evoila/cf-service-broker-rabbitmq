@@ -64,7 +64,9 @@ public class RabbitMqBindingService extends BindingServiceImpl {
         rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(rabbitMqService,
                 username, password, vHostName);
 
-        String endpoint = ServiceInstanceUtils.connectionUrl(serviceInstance.getHosts());
+        List<ServerAddress> serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
+                plan.getMetadata().getIngressInstanceGroup());
+        String endpoint = ServiceInstanceUtils.connectionUrl(serverAddresses);
 
         // When host is not empty, it is a service key
         if (host != null)
@@ -75,8 +77,8 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
         Map<String, Object> credentials = new HashMap<>();
         credentials.put(URI, dbURL);
-        credentials.put(HOST, host.getIp());
-        credentials.put(PORT, host.getPort());
+        credentials.put(HOST, endpoint.split(":")[0]);
+        credentials.put(PORT, endpoint.split(":")[1]);
         credentials.put(USERNAME, username);
         credentials.put(PASSWORD, password);
         credentials.put(VHOST, vHostName);
