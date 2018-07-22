@@ -4,6 +4,7 @@
 package de.evoila.cf.broker.custom.rabbitmq;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.RandomString;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,9 +31,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
     private static String URI = "uri";
     private static String USERNAME = "user";
-    private static String PASSWORD = "password";
-    private static String HOST = "host";
-    private static String PORT = "port";
+    private static String NAME = "name";
     private static String VHOST = "vhost";
 
 	private Logger log = LoggerFactory.getLogger(getClass());
@@ -54,7 +54,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
     @Override
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
-                                                    ServiceInstance serviceInstance, Plan plan, ServerAddress host) {
+                                                    ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
         RabbitMqService rabbitMqService = connection(serviceInstance, plan);
 
         String username = usernameRandomString.nextString();
@@ -64,30 +64,35 @@ public class RabbitMqBindingService extends BindingServiceImpl {
         rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(rabbitMqService,
                 username, password, vHostName);
 
-        List<ServerAddress> serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
-                plan.getMetadata().getIngressInstanceGroup());
+        List<ServerAddress> serverAddresses = null;
+        if (plan.getMetadata().getIngressInstanceGroup() != null && host == null)
+            serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
+                    plan.getMetadata().getIngressInstanceGroup());
+        else if (host != null)
+            serverAddresses = Arrays.asList(new ServerAddress("service-key-haproxy", host.getIp(), host.getPort()));
+
+        if (serverAddresses == null || serverAddresses.size() == 0)
+            throw new ServiceBrokerException("Could not find any Service Backends to create Service Binding");
+
         String endpoint = ServiceInstanceUtils.connectionUrl(serverAddresses);
 
-        // When host is not empty, it is a service key
-        if (host != null)
-            endpoint = host.getIp() + ":" + host.getPort();
+        // This needs to be done here and can't be generalized due to the fact that each backend
+        // may have a different URL setup
+        Map<String, Object> configurations = new HashMap<>();
+        configurations.put(URI, String.format("amqp://%s:%s@%s/%s", username, password, endpoint, vHostName));
+        configurations.put(VHOST, vHostName);
+        configurations.put(NAME, vHostName);
 
-        String dbURL = String.format("amqp://%s:%s@%s/%s", username, password, endpoint,
-                vHostName);
-
-        Map<String, Object> credentials = new HashMap<>();
-        credentials.put(URI, dbURL);
-        credentials.put(HOST, endpoint.split(":")[0]);
-        credentials.put(PORT, endpoint.split(":")[1]);
-        credentials.put(USERNAME, username);
-        credentials.put(PASSWORD, password);
-        credentials.put(VHOST, vHostName);
+        Map<String, Object> credentials = ServiceInstanceUtils.bindingObject(serviceInstance.getHosts(),
+                username,
+                password,
+                configurations);
 
         return credentials;
     }
 
     @Override
-    protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) {
+    protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) {
         RabbitMqService rabbitMqService = connection(serviceInstance, plan);
 
         rabbitMqCustomImplementation.removeUser(rabbitMqService, binding.getCredentials().get(USERNAME).toString());
