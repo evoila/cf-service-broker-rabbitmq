@@ -65,10 +65,15 @@ public class RabbitMqBindingService extends BindingServiceImpl {
                 username, password, vHostName);
 
         List<ServerAddress> serverAddresses = null;
-        if (plan.getMetadata().getIngressInstanceGroup() != null && host == null)
-            serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
-                    plan.getMetadata().getIngressInstanceGroup());
-        else if (host != null)
+        if (plan.getPlatform() == Platform.BOSH && plan.getMetadata() != null) {
+            if (plan.getMetadata().getIngressInstanceGroup() != null && host == null)
+                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
+                        plan.getMetadata().getIngressInstanceGroup());
+            else if (plan.getMetadata().getIngressInstanceGroup() == null)
+                serverAddresses = serviceInstance.getHosts();
+        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE && existingEndpointBean != null) {
+            serverAddresses = existingEndpointBean.getHosts();
+        } else if (host != null)
             serverAddresses = Arrays.asList(new ServerAddress("service-key-haproxy", host.getIp(), host.getPort()));
 
         if (serverAddresses == null || serverAddresses.size() == 0)
