@@ -92,25 +92,3 @@ instance_groups:
       - name: rabbitmq-mgmt
         balance: roundrobin
         port: 15672
-
-#- name: smoke-tests
-#  lifecycle: errand
-#  instances: 0
-#  vm_type: minimal
-#  stemcell: default
-#  networks:
-#  - name: service
-#  azs:
-#  - z1
-#  jobs:
-#  - name: smoke-tests
-#    release: osb-bosh-rabbitmq
-#  properties:
-#    rabbitmq:
-#      smoke-tests:
-#        target:
-#          port: 5432
-#          username: admin
-#          password: admin
-#        backend:
-#          port: 6432
