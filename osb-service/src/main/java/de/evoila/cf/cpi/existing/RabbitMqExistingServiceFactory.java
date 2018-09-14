@@ -9,6 +9,8 @@ import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.repository.PlatformRepository;
+import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.broker.util.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -33,7 +35,11 @@ public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 	@Autowired
 	private ExistingEndpointBean existingEndpointBean;
 
-	@Override
+    public RabbitMqExistingServiceFactory(PlatformRepository platformRepository, ServicePortAvailabilityVerifier portAvailabilityVerifier, ExistingEndpointBean existingEndpointBean) {
+        super(platformRepository, portAvailabilityVerifier, existingEndpointBean);
+    }
+
+    @Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) {
         RabbitMqService rabbitMqService = this.connection(serviceInstance, plan);
 

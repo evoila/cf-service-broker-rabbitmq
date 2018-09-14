@@ -6,12 +6,16 @@ package de.evoila.cf.broker.custom.rabbitmq;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
+import de.evoila.cf.broker.repository.BindingRepository;
+import de.evoila.cf.broker.repository.RouteBindingRepository;
+import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
+import de.evoila.cf.broker.repository.ServiceInstanceRepository;
+import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -36,11 +40,17 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
-	@Autowired
 	private RabbitMqCustomImplementation rabbitMqCustomImplementation;
-	
-	@Autowired
+
 	private ExistingEndpointBean existingEndpointBean;
+
+    public RabbitMqBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository, ServiceInstanceRepository serviceInstanceRepository,
+                                  RouteBindingRepository routeBindingRepository, HAProxyService haProxyService, RabbitMqCustomImplementation rabbitMqCustomImplementation, ExistingEndpointBean existingEndpointBean) {
+        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
+        this.rabbitMqCustomImplementation = rabbitMqCustomImplementation;
+        this.existingEndpointBean = existingEndpointBean;
+
+    }
 
     @Override
     public ServiceInstanceBinding getServiceInstanceBinding(String id) {
