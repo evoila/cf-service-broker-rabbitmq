@@ -10,7 +10,6 @@ import de.evoila.cf.broker.model.ServiceInstance;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -31,8 +30,11 @@ public class RabbitMqCustomImplementation {
 
     private Logger log = LoggerFactory.getLogger(RabbitMqCustomImplementation.class);
 
-	@Autowired
 	private ExistingEndpointBean existingEndpointBean;
+
+	public RabbitMqCustomImplementation(ExistingEndpointBean existingEndpointBean) {
+		this.existingEndpointBean = existingEndpointBean;
+	}
 
 	public RabbitMqService connection(ServiceInstance serviceInstance, Plan plan) {
 		RabbitMqService rabbitMqService = new RabbitMqService();
