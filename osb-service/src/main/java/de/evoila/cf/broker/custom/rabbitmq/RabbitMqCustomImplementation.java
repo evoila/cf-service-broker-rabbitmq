@@ -4,9 +4,9 @@
 package de.evoila.cf.broker.custom.rabbitmq;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
-import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.catalog.plan.Plan;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +22,7 @@ import java.util.Arrays;
 
 
 /**
- * @author sebastian boeing, evoila.
- *
+ * @author Johannes Hiemer.
  */
 @Service
 public class RabbitMqCustomImplementation {

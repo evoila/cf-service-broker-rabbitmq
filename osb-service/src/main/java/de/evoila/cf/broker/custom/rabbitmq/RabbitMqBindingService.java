@@ -6,10 +6,10 @@ package de.evoila.cf.broker.custom.rabbitmq;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
-import de.evoila.cf.broker.repository.BindingRepository;
-import de.evoila.cf.broker.repository.RouteBindingRepository;
-import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
-import de.evoila.cf.broker.repository.ServiceInstanceRepository;
+import de.evoila.cf.broker.model.catalog.ServerAddress;
+import de.evoila.cf.broker.model.catalog.plan.Plan;
+import de.evoila.cf.broker.repository.*;
+import de.evoila.cf.broker.service.AsyncBindingService;
 import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.RandomString;
@@ -44,17 +44,16 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 	private ExistingEndpointBean existingEndpointBean;
 
-    public RabbitMqBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository, ServiceInstanceRepository serviceInstanceRepository,
-                                  RouteBindingRepository routeBindingRepository, HAProxyService haProxyService, RabbitMqCustomImplementation rabbitMqCustomImplementation, ExistingEndpointBean existingEndpointBean) {
-        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
+    public RabbitMqBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
+                                  ServiceInstanceRepository serviceInstanceRepository,
+                                  RouteBindingRepository routeBindingRepository, HAProxyService haProxyService,
+                                  RabbitMqCustomImplementation rabbitMqCustomImplementation, ExistingEndpointBean existingEndpointBean,
+                                  JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository) {
+        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository,
+                haProxyService, jobRepository, asyncBindingService, platformRepository);
         this.rabbitMqCustomImplementation = rabbitMqCustomImplementation;
         this.existingEndpointBean = existingEndpointBean;
 
-    }
-
-    @Override
-    public ServiceInstanceBinding getServiceInstanceBinding(String id) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
