@@ -6,6 +6,7 @@ package de.evoila.cf.cpi.existing;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitMqCustomImplementation;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitMqService;
+import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
@@ -72,6 +73,11 @@ public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
                     existingEndpointBean.getDatabase(), existingEndpointBean.getHosts());
 
         return rabbitMqService;
+    }
+
+    @Override
+    public ServiceInstance getInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+        return serviceInstance;
     }
 
 }
