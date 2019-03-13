@@ -4,9 +4,13 @@
 package de.evoila.cf.broker.custom.rabbitmq;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
+import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
+import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +21,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -35,18 +41,33 @@ public class RabbitMqCustomImplementation {
 		this.existingEndpointBean = existingEndpointBean;
 	}
 
-	public RabbitMqService connection(ServiceInstance serviceInstance, Plan plan) {
-		RabbitMqService rabbitMqService = new RabbitMqService();
+    public RabbitMqService connection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential) {
+        RabbitMqService rabbitMqService = new RabbitMqService();
 
-        if(plan.getPlatform() == Platform.BOSH)
-            rabbitMqService.createConnection(serviceInstance.getUsername(), serviceInstance.getPassword(),
-                    "admin", serviceInstance.getHosts());
-        else if (plan.getPlatform() == Platform.EXISTING_SERVICE)
+        if(plan.getPlatform() == Platform.BOSH) {
+            List<ServerAddress> serverAddresses = serviceInstance.getHosts();
+
+            if (plan.getMetadata().getIngressInstanceGroup() != null &&
+                    plan.getMetadata().getIngressInstanceGroup().length() > 0)
+                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
+                        plan.getMetadata().getIngressInstanceGroup());
+
+            rabbitMqService.createConnection(usernamePasswordCredential.getUsername(), usernamePasswordCredential.getPassword(),
+                    "/", serverAddresses);
+        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE)
             rabbitMqService.createConnection(existingEndpointBean.getUsername(), existingEndpointBean.getPassword(),
                     existingEndpointBean.getDatabase(), existingEndpointBean.getHosts());
 
-        return  rabbitMqService;
-	}
+        return rabbitMqService;
+    }
+
+    public void closeConnection(RabbitMqService rabbitMqService) throws PlatformException {
+	    try {
+            rabbitMqService.closeConnection();
+        } catch (IOException ex) {
+            throw new PlatformException("Could not close connection", ex);
+        }
+    }
 
 	public void addUserToVHostAndSetPermissions(RabbitMqService rabbitMqService,
                                                 String newUserName, String newUserPassword, String vhostName) {
