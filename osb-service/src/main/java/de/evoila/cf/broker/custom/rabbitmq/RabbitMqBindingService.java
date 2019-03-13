@@ -25,7 +25,6 @@ import java.util.Map;
 
 /**
  * @author Johannes Hiemer.
- *
  */
 @Service
 public class RabbitMqBindingService extends BindingServiceImpl {

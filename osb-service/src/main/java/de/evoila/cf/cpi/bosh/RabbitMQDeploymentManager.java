@@ -11,6 +11,9 @@ import org.springframework.core.env.Environment;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Johannes Hiemer.
+ */
 public class RabbitMQDeploymentManager extends DeploymentManager {
     public static final String INSTANCE_GROUP = "rabbitmq";
 
