@@ -52,7 +52,7 @@ public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 
 	@Override
     public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> parameters) throws PlatformException {
-        credentialStore.createUser(serviceInstance, serviceInstance.getId());
+        credentialStore.createUser(serviceInstance, CredentialConstants.BROKER_ADMIN);
         UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.BROKER_ADMIN);
 
         serviceInstance.setUsername(usernamePasswordCredential.getUsername());
