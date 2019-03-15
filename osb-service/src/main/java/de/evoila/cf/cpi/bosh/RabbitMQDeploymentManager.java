@@ -34,7 +34,9 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
                 .findAny().get().getProperties();
 
         HashMap<String, Object> rabbitmqExporter = (HashMap<String, Object>) manifestProperties.get("rabbitmq_exporter");
-        HashMap<String, Object> rabbitmqServer = (HashMap<String, Object>) manifestProperties.get("rabbitmq-server");
+        HashMap<String, Object> rabbitmq = (HashMap<String, Object>) manifestProperties.get("rabbitmq");
+        HashMap<String, Object> rabbitmqServer = (HashMap<String, Object>) rabbitmq.get("server");
+
 
         String password = randomStringPassword.nextString();
 
