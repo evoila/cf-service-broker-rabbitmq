@@ -4,16 +4,19 @@
 package de.evoila.cf.broker.custom.rabbitmq;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
+import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.repository.*;
 import de.evoila.cf.broker.service.AsyncBindingService;
 import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
-import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
+import de.evoila.cf.cpi.CredentialConstants;
+import de.evoila.cf.security.credentials.CredentialStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,35 +28,35 @@ import java.util.Map;
 
 /**
  * @author Johannes Hiemer.
- *
  */
 @Service
 public class RabbitMqBindingService extends BindingServiceImpl {
 
-    private RandomString usernameRandomString = new RandomString(10);
-    private RandomString passwordRandomString = new RandomString(15);
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private static String URI = "uri";
-    private static String USERNAME = "user";
-    private static String NAME = "name";
-    private static String VHOST = "vhost";
 
-	private Logger log = LoggerFactory.getLogger(getClass());
+    private static String USERNAME = "user";
+
+    private static String VHOST = "vhost";
 
 	private RabbitMqCustomImplementation rabbitMqCustomImplementation;
 
 	private ExistingEndpointBean existingEndpointBean;
 
+	private CredentialStore credentialStore;
+
     public RabbitMqBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
                                   ServiceInstanceRepository serviceInstanceRepository,
                                   RouteBindingRepository routeBindingRepository, HAProxyService haProxyService,
                                   RabbitMqCustomImplementation rabbitMqCustomImplementation, ExistingEndpointBean existingEndpointBean,
-                                  JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository) {
+                                  JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository,
+                                  CredentialStore credentialStore) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository,
                 haProxyService, jobRepository, asyncBindingService, platformRepository);
         this.rabbitMqCustomImplementation = rabbitMqCustomImplementation;
         this.existingEndpointBean = existingEndpointBean;
-
+        this.credentialStore = credentialStore;
     }
 
     @Override
@@ -63,15 +66,21 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
     @Override
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
-                                                    ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
-        RabbitMqService rabbitMqService = connection(serviceInstance, plan);
+                                                    ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException,
+            PlatformException {
+        UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.BROKER_ADMIN);
 
-        String username = usernameRandomString.nextString();
-        String password = passwordRandomString.nextString();
+        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, usernamePasswordCredential);
+
+        credentialStore.createUser(serviceInstance, bindingId);
+        UsernamePasswordCredential bindingCredentials = credentialStore.getUser(serviceInstance, bindingId);
+
         String vHostName = serviceInstance.getId();
-
         rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(rabbitMqService,
-                username, password, vHostName);
+                bindingCredentials.getUsername(),
+                bindingCredentials.getPassword(),
+                vHostName);
+        rabbitMqCustomImplementation.closeConnection(rabbitMqService);
 
         List<ServerAddress> serverAddresses = null;
         if (plan.getPlatform() == Platform.BOSH && plan.getMetadata() != null) {
@@ -93,43 +102,27 @@ public class RabbitMqBindingService extends BindingServiceImpl {
         // This needs to be done here and can't be generalized due to the fact that each backend
         // may have a different URL setup
         Map<String, Object> configurations = new HashMap<>();
-        configurations.put(URI, String.format("amqp://%s:%s@%s/%s", username, password, endpoint, vHostName));
+        configurations.put(URI, String.format("amqp://%s:%s@%s/%s", bindingCredentials.getUsername(),
+                bindingCredentials.getPassword(), endpoint, vHostName));
         configurations.put(VHOST, vHostName);
-        configurations.put(NAME, vHostName);
 
         Map<String, Object> credentials = ServiceInstanceUtils.bindingObject(serviceInstance.getHosts(),
-                username,
-                password,
+                bindingCredentials.getUsername(),
+                bindingCredentials.getPassword(),
                 configurations);
 
         return credentials;
     }
 
     @Override
-    protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) {
-        RabbitMqService rabbitMqService = connection(serviceInstance, plan);
+    protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+        UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.BROKER_ADMIN);
+        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, usernamePasswordCredential);
 
         rabbitMqCustomImplementation.removeUser(rabbitMqService, binding.getCredentials().get(USERNAME).toString());
-    }
+        rabbitMqCustomImplementation.closeConnection(rabbitMqService);
 
-    private RabbitMqService connection(ServiceInstance serviceInstance, Plan plan) {
-        RabbitMqService rabbitMqService = new RabbitMqService();
-
-        if(plan.getPlatform() == Platform.BOSH) {
-            List<ServerAddress> serverAddresses = serviceInstance.getHosts();
-
-            if (plan.getMetadata().getIngressInstanceGroup() != null &&
-                    plan.getMetadata().getIngressInstanceGroup().length() > 0)
-                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
-                        plan.getMetadata().getIngressInstanceGroup());
-
-            rabbitMqService.createConnection(serviceInstance.getUsername(), serviceInstance.getPassword(),
-                    "/", serverAddresses);
-        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE)
-            rabbitMqService.createConnection(existingEndpointBean.getUsername(), existingEndpointBean.getPassword(),
-                    existingEndpointBean.getDatabase(), existingEndpointBean.getHosts());
-
-        return rabbitMqService;
+        credentialStore.deleteCredentials(serviceInstance, binding.getId());
     }
 
 }

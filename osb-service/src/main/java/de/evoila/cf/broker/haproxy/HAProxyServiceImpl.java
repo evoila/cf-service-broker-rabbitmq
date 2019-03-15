@@ -14,9 +14,7 @@ import java.util.List;
 
 /**
  * @author Rene Schollmeyer
- *
  */
-
 @Service
 public class HAProxyServiceImpl extends HAProxyService {
 

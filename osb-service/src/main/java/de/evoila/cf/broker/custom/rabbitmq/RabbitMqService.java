@@ -57,6 +57,10 @@ public class RabbitMqService {
         return true;
 	}
 
+	public void closeConnection() throws IOException {
+	    this.connection.close();
+    }
+
 	public String getAdminApi() {
 	    return SCHEME + "://" + this.serverAddress.getIp() + ":" +  ADMIN_PORT + "/api";
     }

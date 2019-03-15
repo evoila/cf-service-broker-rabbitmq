@@ -7,6 +7,8 @@ import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.CatalogService;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
+import de.evoila.cf.cpi.CredentialConstants;
+import de.evoila.cf.security.credentials.CredentialStore;
 import io.bosh.client.deployments.Deployment;
 import io.bosh.client.vms.Vm;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -22,11 +24,16 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
 
     private final int defaultPort = 5672;
 
-    RabbitMQBoshPlatformService(PlatformRepository repository, CatalogService catalogService, ServicePortAvailabilityVerifier availabilityVerifier,
-                                BoshProperties boshProperties, Optional<DashboardClient> dashboardClient, Environment environment) {
+    private CredentialStore credentialStore;
+
+    public RabbitMQBoshPlatformService(PlatformRepository repository, CatalogService catalogService,
+                                ServicePortAvailabilityVerifier availabilityVerifier,
+                                BoshProperties boshProperties, Optional<DashboardClient> dashboardClient,
+                                Environment environment, CredentialStore credentialStore) {
         super(repository,catalogService,
               availabilityVerifier,boshProperties,
-              dashboardClient, new RabbitMQDeploymentManager(boshProperties, environment));
+              dashboardClient, new RabbitMQDeploymentManager(boshProperties, environment, credentialStore));
+        this.credentialStore = credentialStore;
     }
 
     @Override
@@ -38,5 +45,8 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
     }
 
     @Override
-    public void postDeleteInstance(ServiceInstance serviceInstance) { }
+    public void postDeleteInstance(ServiceInstance serviceInstance) {
+        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.MANAGEMENT_ADMIN);
+        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.BROKER_ADMIN);
+    }
 }
