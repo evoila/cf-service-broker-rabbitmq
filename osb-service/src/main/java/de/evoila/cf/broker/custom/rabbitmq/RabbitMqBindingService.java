@@ -20,6 +20,7 @@ import de.evoila.cf.security.credentials.CredentialStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -48,7 +49,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
     public RabbitMqBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
                                   ServiceInstanceRepository serviceInstanceRepository,
-                                  RouteBindingRepository routeBindingRepository, HAProxyService haProxyService,
+                                  RouteBindingRepository routeBindingRepository, @Autowired(required = false) HAProxyService haProxyService,
                                   RabbitMqCustomImplementation rabbitMqCustomImplementation, ExistingEndpointBean existingEndpointBean,
                                   JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository,
                                   CredentialStore credentialStore) {
