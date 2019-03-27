@@ -16,6 +16,7 @@ import java.util.List;
  * @author Rene Schollmeyer
  */
 @Service
+@ConditionalOnBean(HAProxyConfiguration.class)
 public class HAProxyServiceImpl extends HAProxyService {
 
 	public HAProxyServiceImpl(HAProxyConfiguration haProxyConfiguration) {
