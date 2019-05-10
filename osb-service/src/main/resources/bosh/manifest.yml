@@ -42,10 +42,26 @@ instance_groups:
       user: admin
     rabbitmq:
       server:
+        ssl:
+          enable: false
+          fail_if_no_peer_cert: false
+          verify: verifiy_none
+          handshake_timeout: 5000
+        disk_free_limit: 50000000
+        fd_limit: 65536
+        frame_max: 131072
+        handshake_timeout: 10000
+        net_ticktime: 130
+        num_ssl_acceptors: 10
+        num_tcp_acceptors: 10
+        reverse_dns_lookups: false
+        vm_memory_high_watermark: 0.4
+        channel_max: 5
         plugins:
         - rabbitmq_management
         - rabbitmq_mqtt
         - rabbitmq_stomp
+        - rabbitmq_auth_mechanism_ssl
         ports:
         - 5672
         - 5671
@@ -55,13 +71,14 @@ instance_groups:
         - 61614
         - 15672
         - 15674
+        - 15671
         administrators:
           management:
             username: admin
           broker:
             username: admin
         cookie: "rabbit-cluster:local"
-        cluster_partition_handling: ignore
+        cluster_partition_handling: autoheal
         disk_alarm_threshold: "{mem_relative,0.01}"
 
 - name: haproxy
