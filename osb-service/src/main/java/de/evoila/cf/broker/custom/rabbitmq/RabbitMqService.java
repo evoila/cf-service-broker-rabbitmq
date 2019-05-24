@@ -5,11 +5,15 @@ package de.evoila.cf.broker.custom.rabbitmq;
 
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import de.evoila.cf.broker.exception.PlatformException;
+import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -19,9 +23,13 @@ import java.util.concurrent.TimeoutException;
  */
 public class RabbitMqService {
 
-    private static String SCHEME = "http";
+    private static String HTTP_SCHEME = "http";
 
-    private static int ADMIN_PORT = 15672;
+    private static String HTTPS_SCHEME = "https";
+
+    private static int ADMIN_HTTP_PORT = 15672;
+
+    private static int ADMIN_HTTPS_PORT = 15671;
 
     private ServerAddress serverAddress;
 
@@ -37,7 +45,7 @@ public class RabbitMqService {
 	    return connection != null && connection.isOpen();
 	}
 
-	public boolean createConnection(String username, String password, String vhostName, List<ServerAddress> serverAddresses) {
+	public boolean createConnection(String username, String password, String vhostName, List<ServerAddress> serverAddresses, boolean tlsEnabled) throws PlatformException {
 	    this.serverAddress = serverAddresses.get(0);
 	    this.username = username;
         this.password = password;
@@ -48,9 +56,11 @@ public class RabbitMqService {
             connectionFactory.setVirtualHost(vhostName);
             connectionFactory.setUsername(username);
             connectionFactory.setPassword(password);
-
+            if (tlsEnabled) {
+                connectionFactory.useSslProtocol();
+            }
             connection = connectionFactory.newConnection();
-        } catch (IOException | TimeoutException e) {
+        } catch (NoSuchAlgorithmException | KeyManagementException | IOException | TimeoutException e) {
             log.info("Could not establish connection", e);
             return false;
         }
@@ -61,9 +71,12 @@ public class RabbitMqService {
 	    this.connection.close();
     }
 
-	public String getAdminApi() {
-	    return SCHEME + "://" + this.serverAddress.getIp() + ":" +  ADMIN_PORT + "/api";
-    }
+	public String getAdminApi(boolean tlsEnabled) {
+	    if (tlsEnabled)
+	        return HTTPS_SCHEME + "://" + this.serverAddress.getIp() + ":" +  ADMIN_HTTPS_PORT + "/api";
+        else
+            return HTTP_SCHEME + "://" + this.serverAddress.getIp() + ":" +  ADMIN_HTTP_PORT + "/api";
+	}
 
     public String getUsername() {
         return username;

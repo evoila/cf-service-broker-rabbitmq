@@ -44,8 +44,10 @@ public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
 
     @Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
-        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, null);
-        rabbitMqCustomImplementation.removeVHosts(rabbitMqService, serviceInstance.getId());
+        boolean tlsEnabled = (boolean) plan.getMetadata().getCustomParameters().get("tlsEnabled");
+
+        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, null, tlsEnabled);
+        rabbitMqCustomImplementation.removeVHosts(rabbitMqService, serviceInstance.getId(), tlsEnabled);
         rabbitMqCustomImplementation.closeConnection(rabbitMqService);
         credentialStore.deleteCredentials(serviceInstance, CredentialConstants.BROKER_ADMIN);
 	}
@@ -56,11 +58,11 @@ public class RabbitMqExistingServiceFactory extends ExistingServiceFactory {
         UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.BROKER_ADMIN);
 
         serviceInstance.setUsername(usernamePasswordCredential.getUsername());
-
-        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, null);
-        rabbitMqCustomImplementation.createVHosts(rabbitMqService, serviceInstance.getId());
+        boolean tlsEnabled = (boolean) plan.getMetadata().getCustomParameters().get("tlsEnabled");
+        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, null, tlsEnabled);
+        rabbitMqCustomImplementation.createVHosts(rabbitMqService, serviceInstance.getId(), tlsEnabled);
         rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(rabbitMqService, usernamePasswordCredential.getUsername(),
-                usernamePasswordCredential.getPassword(), serviceInstance.getId());
+                usernamePasswordCredential.getPassword(), serviceInstance.getId(), tlsEnabled);
         rabbitMqCustomImplementation.closeConnection(rabbitMqService);
 
         return serviceInstance;

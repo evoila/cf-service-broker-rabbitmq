@@ -71,7 +71,12 @@ public class RabbitMqBindingService extends BindingServiceImpl {
             PlatformException {
         UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.BROKER_ADMIN);
 
-        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, usernamePasswordCredential);
+        HashMap<String, Object> rabbitmqParams = (HashMap<String, Object>) serviceInstance.getParameters().get("rabbitmq");
+        HashMap<String, Object> serverParams = (HashMap<String, Object>) rabbitmqParams.get("server");
+        HashMap<String, Object> sslParams = (HashMap<String, Object>) serverParams.get("ssl");
+
+        boolean tlsEnabled = (boolean) sslParams.get("enabled");
+        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, usernamePasswordCredential, tlsEnabled);
 
         credentialStore.createUser(serviceInstance, bindingId);
         UsernamePasswordCredential bindingCredentials = credentialStore.getUser(serviceInstance, bindingId);
@@ -80,7 +85,8 @@ public class RabbitMqBindingService extends BindingServiceImpl {
         rabbitMqCustomImplementation.addUserToVHostAndSetPermissions(rabbitMqService,
                 bindingCredentials.getUsername(),
                 bindingCredentials.getPassword(),
-                vHostName);
+                vHostName,
+                tlsEnabled);
         rabbitMqCustomImplementation.closeConnection(rabbitMqService);
 
         List<ServerAddress> serverAddresses = null;
@@ -118,9 +124,15 @@ public class RabbitMqBindingService extends BindingServiceImpl {
     @Override
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws PlatformException {
         UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.BROKER_ADMIN);
-        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, usernamePasswordCredential);
 
-        rabbitMqCustomImplementation.removeUser(rabbitMqService, binding.getCredentials().get(USERNAME).toString());
+        HashMap<String, Object> rabbitmqParams = (HashMap<String, Object>) serviceInstance.getParameters().get("rabbitmq");
+        HashMap<String, Object> serverParams = (HashMap<String, Object>) rabbitmqParams.get("server");
+        HashMap<String, Object> sslParams = (HashMap<String, Object>) serverParams.get("ssl");
+
+        boolean tlsEnabled = (boolean) sslParams.get("enabled");
+        RabbitMqService rabbitMqService = rabbitMqCustomImplementation.connection(serviceInstance, plan, usernamePasswordCredential, tlsEnabled);
+
+        rabbitMqCustomImplementation.removeUser(rabbitMqService, binding.getCredentials().get(USERNAME).toString(), tlsEnabled);
         rabbitMqCustomImplementation.closeConnection(rabbitMqService);
 
         credentialStore.deleteCredentials(serviceInstance, binding.getId());
