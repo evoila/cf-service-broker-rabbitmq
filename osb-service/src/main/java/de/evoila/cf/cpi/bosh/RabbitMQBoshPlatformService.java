@@ -71,14 +71,52 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
         HashMap<String, Object>  rabbitmqServer = (HashMap<String, Object>) rabbitmq.get("server");
         HashMap<String, Object>  rabbitmqSsl = (HashMap<String, Object>) rabbitmqServer.get("ssl");
 
-        if (rabbitmqSsl.get("enable").equals(true)) {
-            this.defaultPort = RabbitmqPort.SSL_PORT;
-            plan.getMetadata().getCustomParameters().put("tlsEnabled", true);
+        /* to handle dynamically http and tls for the serviceInstance, we need to remember what is the state of the ssl
+          parameter, which tells us if the instance is currently using http or tls for connections. If the parameter is  not set,
+          it means that tls was not activated.
+         */
+        HashMap<String, Object> serviceInstanceRabbitmqParam = new HashMap<>();
+        HashMap<String, Object> serviceInstanceServerParam = new HashMap<>();
+        HashMap<String, Object> serviceInstaceSslParam = new HashMap<>();
+        HashMap<String, Object> serviceInstaceSslEnabledParam = new HashMap<>();
 
+        if (serviceInstance.getParameters().get("rabbitmq") != null) {
+            serviceInstanceRabbitmqParam = (HashMap<String, Object>) serviceInstance.getParameters().get("rabbitmq");
+
+            if (serviceInstanceRabbitmqParam.get("server") != null) {
+                serviceInstanceServerParam = (HashMap<String, Object>) serviceInstanceRabbitmqParam.get("server");
+
+                if (serviceInstanceServerParam.get("ssl") != null) {
+                    serviceInstaceSslParam = (HashMap<String, Object>) serviceInstanceServerParam.get("ssl");
+
+                } else {
+                    serviceInstaceSslEnabledParam.put("enabled", false);
+                    serviceInstaceSslParam.put("ssl", serviceInstaceSslEnabledParam);
+                    serviceInstance.setParameters(serviceInstanceRabbitmqParam);
+
+                }
+            } else {
+                serviceInstaceSslEnabledParam.put("enabled", false);
+                serviceInstaceSslParam.put("ssl", serviceInstaceSslEnabledParam);
+                serviceInstanceServerParam.put("server", serviceInstaceSslParam);
+                serviceInstance.setParameters(serviceInstanceRabbitmqParam);
+            }
+        } else {
+            serviceInstaceSslEnabledParam.put("enabled", false);
+            serviceInstaceSslParam.put("ssl", serviceInstaceSslEnabledParam);
+            serviceInstanceServerParam.put("server", serviceInstaceSslParam);
+            serviceInstanceRabbitmqParam.put("rabbitmq", serviceInstanceServerParam);
+            serviceInstance.setParameters(serviceInstanceRabbitmqParam);
+        }
+
+        if (rabbitmqSsl.get("enabled").equals(true)) {
+            this.defaultPort = RabbitmqPort.SSL_PORT;
+            updateTlsStatus(serviceInstance, true);
         } else {
             this.defaultPort = RabbitmqPort.TCP_PORT;
-            plan.getMetadata().getCustomParameters().put("tlsEnabled", false);
+            updateTlsStatus(serviceInstance, false);
         }
+
         vms.forEach(vm -> serviceInstance.getHosts().add(super.toServerAddress(vm, defaultPort)));
     }
 
@@ -87,6 +125,16 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
         credentialStore.deleteCredentials(serviceInstance, CredentialConstants.MANAGEMENT_ADMIN);
         credentialStore.deleteCredentials(serviceInstance, CredentialConstants.BROKER_ADMIN);
         credentialStore.deleteCertificate(serviceInstance, CredentialConstants.TRANSPORT_SSL);
+    }
+
+    private void updateTlsStatus(ServiceInstance serviceInstance, boolean tlsEnabled) {
+
+        HashMap<String, Object> params = (HashMap<String, Object>) serviceInstance.getParameters();
+        HashMap<String, Object> rabbitmq = (HashMap<String, Object>)params.get("rabbitmq");
+        HashMap<String, Object> rabbitmqServer = (HashMap<String, Object>)rabbitmq.get("server");
+
+        HashMap<String, Object> rabbitmqServerSsl = (HashMap<String, Object>)rabbitmqServer.get("ssl");
+        rabbitmqServerSsl.put("enabled", tlsEnabled);
     }
 
 }
