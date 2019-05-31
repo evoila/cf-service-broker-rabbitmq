@@ -62,7 +62,7 @@ public class RabbitMqService {
             connection = connectionFactory.newConnection();
         } catch (NoSuchAlgorithmException | KeyManagementException | IOException | TimeoutException e) {
             log.info("Could not establish connection", e);
-            return false;
+            throw new PlatformException(e);
         }
         return true;
 	}
