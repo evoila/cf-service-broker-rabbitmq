@@ -14,6 +14,7 @@ import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitmqPort;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import de.evoila.cf.security.credentials.CredentialStore;
+import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import io.bosh.client.deployments.Deployment;
 import io.bosh.client.vms.Vm;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -122,9 +123,9 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
 
     @Override
     public void postDeleteInstance(ServiceInstance serviceInstance) {
-        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.MANAGEMENT_ADMIN);
-        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.BROKER_ADMIN);
-        credentialStore.deleteCertificate(serviceInstance, CredentialConstants.TRANSPORT_SSL);
+        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+        credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS);
+        credentialStore.deleteCertificate(serviceInstance, DefaultCredentialConstants.EXPORTER_CREDENTIALS);
     }
 
     private void updateTlsStatus(ServiceInstance serviceInstance, boolean tlsEnabled) {

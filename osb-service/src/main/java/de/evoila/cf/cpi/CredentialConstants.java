@@ -9,4 +9,6 @@ public class CredentialConstants {
 
     public static String TRANSPORT_SSL = "transport_ssl";
 
+    public static String BROKER_ADMIN = "broker_admin";
+
 }
