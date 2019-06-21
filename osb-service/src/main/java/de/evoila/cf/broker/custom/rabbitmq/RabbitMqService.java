@@ -6,7 +6,6 @@ package de.evoila.cf.broker.custom.rabbitmq;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -43,8 +43,8 @@ instance_groups:
     rabbitmq:
       server:
         ssl:
-          enabled: false
-          fail_if_no_peer_cert: false
+          enabled: true
+          fail_if_no_peer_cert: true
           verify: verifiy_none
           handshake_timeout: 5000
         disk_free_limit: 50000000
@@ -72,11 +72,36 @@ instance_groups:
         - 15672
         - 15674
         - 15671
-        administrators:
-          management:
-            username: admin
-          broker:
-            username: admin
+        users:
+          - username: user
+            password: test
+          - username: monitor
+            password: monitor
+            tag: monitoring
+        user_default_tag: policymaker
+        admin_users:
+          - username: admin
+            password: admin
+          - username: manager
+            password: manager
+            tag: monitoring
+          - username: broker
+            password: broker
+            tag: none
+        backup_users:
+          - username: backup
+            password: rules
+        vhosts:
+          - name: user_vhost
+            users:
+              - user
+              - monitor
+
+        #administrators:
+        #  management:
+        #    username: admin
+        #  broker:
+        #    username: admin
         cookie: "rabbit-cluster:local"
         cluster_partition_handling: autoheal
         disk_alarm_threshold: "{mem_relative,0.01}"
@@ -134,3 +159,25 @@ instance_groups:
         balance: roundrobin
         port: 61614
         check: "check"
+
+- name: smoke-tests
+  lifecycle: errand
+  instances: 0
+  vm_type: minimal
+  stemcell: default
+  azs:
+    - z1
+  networks:
+    - name: service
+  jobs:
+    - release: osb-bosh-rabbitmq
+      name: smoke-tests
+  properties:
+    rabbitmq:
+      smoke-tests:
+        target:
+          port:     5432
+          username: admin
+          password: admin
+        backend:
+          port:     6432

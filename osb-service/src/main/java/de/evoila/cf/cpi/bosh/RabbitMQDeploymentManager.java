@@ -4,17 +4,21 @@ import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.credential.CertificateCredential;
+import de.evoila.cf.broker.model.credential.Credential;
 import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.MapUtils;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import de.evoila.cf.security.credentials.CredentialStore;
+import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.core.env.Environment;
 import org.springframework.credhub.support.certificate.CertificateParameters;
 import org.springframework.credhub.support.certificate.ExtendedKeyUsage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +32,10 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
     private static final String SSL_CERT = "cert";
     private static final String SSL_KEY = "key";
     private static final String ORGANIZATION = "evoila";
+    private static final String RABBITMQ_USERNAME = "rabbitmq_username";
+    private static final String DEFAULT_VHOST_NAME = "default_vhost";
+
+
 
     public RabbitMQDeploymentManager(BoshProperties boshProperties, Environment environment, CredentialStore credentialStore) {
         super(boshProperties, environment);
@@ -52,26 +60,54 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         HashMap<String, Object> rabbitmqServer = (HashMap<String, Object>) rabbitmq.get("server");
         HashMap<String, Object> rabbitmqTls = (HashMap<String, Object>) rabbitmqServer.get("ssl");
 
+        List<HashMap<String, Object>> adminUsers = (List<HashMap<String, Object>>) rabbitmqServer.get("admin_users");
+        HashMap<String, Object> adminProperties = adminUsers.get(0);
+        UsernamePasswordCredential rootCredentials = credentialStore.createUser(serviceInstance,
+                CredentialConstants.ROOT_CREDENTIALS, "root");
 
-        UsernamePasswordCredential managementUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
-                CredentialConstants.MANAGEMENT_ADMIN);
 
-        UsernamePasswordCredential brokerUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
-                CredentialConstants.BROKER_ADMIN);
+        adminProperties.put("username", rootCredentials.getUsername());
+        adminProperties.put("password", rootCredentials.getPassword());
 
-        rabbitmqExporter.put("user", managementUsernamePasswordCredential.getUsername());
-        rabbitmqExporter.put("password", managementUsernamePasswordCredential.getPassword());
 
-        HashMap<String, Object> administrators = (HashMap<String, Object>) rabbitmqServer.get("administrators");
-        HashMap<String, Object> managementAdmins = (HashMap<String, Object>) administrators.get("management");
-        HashMap<String, Object> brokerAdmins = (HashMap<String, Object>) administrators.get("broker");
+        serviceInstance.setUsername(rootCredentials.getUsername());
 
-        managementAdmins.put("username", managementUsernamePasswordCredential.getUsername());
-        managementAdmins.put("password", managementUsernamePasswordCredential.getPassword());
+        UsernamePasswordCredential exporterCredential = credentialStore.createUser(serviceInstance,
+                DefaultCredentialConstants.EXPORTER_CREDENTIALS);
 
-        brokerAdmins.put("username", brokerUsernamePasswordCredential.getUsername());
-        brokerAdmins.put("password", brokerUsernamePasswordCredential.getPassword());
-        brokerAdmins.put("vhost", serviceInstance.getId());
+        rabbitmqExporter.put("user", exporterCredential.getUsername());
+        rabbitmqExporter.put("password", exporterCredential.getPassword());
+
+        HashMap<String, Object> exporterProperties = adminUsers.get(1);
+        exporterProperties.put("username", exporterCredential.getUsername());
+        exporterProperties.put("password", exporterCredential.getPassword());
+
+
+        List<HashMap<String, Object>> backupUsers = (List<HashMap<String, Object>>) rabbitmqServer.get("backup_users");
+        HashMap<String, Object> backupUserProperties = backupUsers.get(0);
+        UsernamePasswordCredential backupUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                DefaultCredentialConstants.BACKUP_CREDENTIALS);
+        backupUserProperties.put("username", backupUsernamePasswordCredential.getUsername());
+        backupUserProperties.put("password", backupUsernamePasswordCredential.getPassword());
+
+
+        List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) rabbitmqServer.get("users");
+        HashMap<String, Object> userProperties= users.get(0);
+        UsernamePasswordCredential userUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                RABBITMQ_USERNAME);
+        userProperties.put("username", userUsernamePasswordCredential.getUsername());
+        userProperties.put("password", userUsernamePasswordCredential.getPassword());
+
+        List<HashMap<String, Object>> vhosts = (List<HashMap<String, Object>>) rabbitmqServer.get("vhosts");
+        HashMap<String, Object> vhostProperties= vhosts.get(0);
+
+        vhostProperties.put("name", DEFAULT_VHOST_NAME);
+
+        HashMap<String, Object> vhostUsers = (HashMap<String, Object>) vhostProperties.get("users");
+        List<String> related_users = (List) vhostUsers.get(0);
+
+        related_users.add(userUsernamePasswordCredential.getUsername());
+
 
         // set up tsl config
         CertificateCredential certificateCredential = credentialStore.createCertificate(serviceInstance, CredentialConstants.TRANSPORT_SSL,
@@ -94,8 +130,6 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
                 MapUtils.deepMerge(manifestProperties, customParameters);
         }
 
-
-        serviceInstance.setUsername(brokerUsernamePasswordCredential.getUsername());
 
         this.updateInstanceGroupConfiguration(manifest, plan);
     }
