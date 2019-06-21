@@ -103,11 +103,8 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
 
         vhostProperties.put("name", DEFAULT_VHOST_NAME);
 
-        HashMap<String, Object> vhostUsers = (HashMap<String, Object>) vhostProperties.get("users");
-        List<String> related_users = (List<String>) vhostUsers.get("users");
-
-        related_users.add(userUsernamePasswordCredential.getUsername());
-
+        List<String> vhostUsers = (List<String>) vhostProperties.get("users");
+        vhostUsers.add(userUsernamePasswordCredential.getUsername());
 
         // set up tsl config
         CertificateCredential certificateCredential = credentialStore.createCertificate(serviceInstance, CredentialConstants.TRANSPORT_SSL,
