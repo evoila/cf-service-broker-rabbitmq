@@ -104,7 +104,7 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         vhostProperties.put("name", DEFAULT_VHOST_NAME);
 
         HashMap<String, Object> vhostUsers = (HashMap<String, Object>) vhostProperties.get("users");
-        List<String> related_users = (List) vhostUsers.get(0);
+        List<String> related_users = (List<String>) vhostUsers.get("users");
 
         related_users.add(userUsernamePasswordCredential.getUsername());
 
