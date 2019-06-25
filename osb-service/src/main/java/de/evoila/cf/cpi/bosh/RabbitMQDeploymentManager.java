@@ -85,7 +85,7 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         rabbitmqExporter.put("user", exporterCredential.getUsername());
         rabbitmqExporter.put("password", exporterCredential.getPassword());
 
-        HashMap<String, Object> exporterProperties = adminUsers.get(1);
+        HashMap<String, Object> exporterProperties = adminUsers.get(2);
         exporterProperties.put("username", exporterCredential.getUsername());
         exporterProperties.put("password", exporterCredential.getPassword());
 
