@@ -76,6 +76,8 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
 
         brokerAdminProperties.put("username", brokerAdminCredentials.getUsername());
         brokerAdminProperties.put("password", brokerAdminCredentials.getPassword());
+        brokerAdminProperties.put("tag", "administrator");
+
 
         serviceInstance.setUsername(rootCredentials.getUsername());
 
