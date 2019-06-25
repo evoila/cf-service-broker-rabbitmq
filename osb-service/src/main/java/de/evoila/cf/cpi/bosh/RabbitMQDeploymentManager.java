@@ -33,7 +33,6 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
     private static final String SSL_KEY = "key";
     private static final String ORGANIZATION = "evoila";
     private static final String RABBITMQ_USERNAME = "rabbitmq_username";
-    private static final String DEFAULT_VHOST_NAME = "default_vhost";
 
 
 
@@ -110,7 +109,7 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         List<HashMap<String, Object>> vhosts = (List<HashMap<String, Object>>) rabbitmqServer.get("vhosts");
         HashMap<String, Object> vhostProperties= vhosts.get(0);
 
-        vhostProperties.put("name", DEFAULT_VHOST_NAME);
+        vhostProperties.put("name", serviceInstance.getId());
 
         List<String> vhostUsers = (List<String>) vhostProperties.get("users");
         vhostUsers.add(userUsernamePasswordCredential.getUsername());
