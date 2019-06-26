@@ -4,7 +4,6 @@ import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.credential.CertificateCredential;
-import de.evoila.cf.broker.model.credential.Credential;
 import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.MapUtils;
 import de.evoila.cf.cpi.CredentialConstants;
@@ -16,13 +15,13 @@ import org.springframework.core.env.Environment;
 import org.springframework.credhub.support.certificate.CertificateParameters;
 import org.springframework.credhub.support.certificate.ExtendedKeyUsage;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * @author Johannes Hiemer.
+ * @author Johannes Hiemer, Marco Di Martino.
+ *
  */
 public class RabbitMQDeploymentManager extends DeploymentManager {
 
