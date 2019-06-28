@@ -45,7 +45,9 @@ public class RabbitMqService {
 	}
 
 	public boolean createConnection(String username, String password, String vhostName, List<ServerAddress> serverAddresses, boolean tlsEnabled) throws PlatformException {
+	    log.debug("Connecting to RabbitMQ with username: " + username + " and password " + password + " to vHost: " + vhostName);
 	    this.serverAddress = serverAddresses.get(0);
+        log.debug("Establishing connection to: " + serverAddress.getIp() + " " + serverAddress.getPort());
 	    this.username = username;
         this.password = password;
 	    try {

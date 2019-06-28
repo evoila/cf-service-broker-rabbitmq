@@ -52,7 +52,7 @@ public class RabbitMqCustomImplementation {
 		this.existingEndpointBean = existingEndpointBean;
 	}
 
-    public RabbitMqService connection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential, boolean tlsEnabled) throws PlatformException {
+	public RabbitMqService connection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential, boolean tlsEnabled) throws PlatformException {
         RabbitMqService rabbitMqService = new RabbitMqService();
 
         if (plan.getPlatform() == Platform.BOSH) {
