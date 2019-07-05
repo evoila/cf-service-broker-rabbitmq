@@ -111,6 +111,7 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         vhostProperties.put("name", serviceInstance.getId());
 
         List<String> vhostUsers = (List<String>) vhostProperties.get("users");
+        vhostUsers.clear();
         vhostUsers.add(userUsernamePasswordCredential.getUsername());
 
         // set up tsl config
