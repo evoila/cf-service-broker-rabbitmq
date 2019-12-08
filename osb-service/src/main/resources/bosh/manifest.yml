@@ -38,7 +38,7 @@ instance_groups:
   - name: blackbox_exporter
     release: prometheus
   properties:
-   rabbitmq_exporter:
+    rabbitmq_exporter:
       rabbitmq:
         url: https://localhost:15671
         user: ((exporter_credentials.username))
