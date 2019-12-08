@@ -35,28 +35,26 @@ instance_groups:
     release: osb-bosh-rabbitmq
   - name: rabbitmq_exporter
     release: prometheus
-    properties:
-      rabbitmq_exporter:
-        rabbitmq:
-          url: https://localhost:15671
-          user: ((exporter_credentials.username))
-          password: ((exporter_credentials.password))
-          ca_cert: ((transport_ssl.ca))
   - name: blackbox_exporter
     release: prometheus
-    properties:
-      blackbox_exporter:
-        config:
-          modules:
-            http_2xx:
-              prober: http
-              http:
-                basic_auth:
-                  username: ((exporter_credentials.username))
-                  password: ((exporter_credentials.password))
-                tls_config:
-                  insecure_skip_verify: true
   properties:
+   rabbitmq_exporter:
+      rabbitmq:
+        url: https://localhost:15671
+        user: ((exporter_credentials.username))
+        password: ((exporter_credentials.password))
+        skip_tls_verify: true
+    blackbox_exporter:
+      config:
+        modules:
+          http_2xx:
+            prober: http
+            http:
+              basic_auth:
+                username: ((exporter_credentials.username))
+                password: ((exporter_credentials.password))
+              tls_config:
+                insecure_skip_verify: true
     rabbitmq:
       server:
         ssl:
