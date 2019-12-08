@@ -82,8 +82,6 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         UsernamePasswordCredential exporterCredential = credentialStore.createUser(serviceInstance,
                 DefaultCredentialConstants.EXPORTER_CREDENTIALS);
 
-        rabbitmqExporter.put("user", exporterCredential.getUsername());
-        rabbitmqExporter.put("password", exporterCredential.getPassword());
 
         HashMap<String, Object> exporterProperties = adminUsers.get(2);
         exporterProperties.put("username", exporterCredential.getUsername());
@@ -126,6 +124,12 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         rabbitmqTls.put(SSL_CA, certificateCredential.getCertificateAuthority());
         rabbitmqTls.put(SSL_CERT, certificateCredential.getCertificate());
         rabbitmqTls.put(SSL_KEY, certificateCredential.getPrivateKey());
+
+        HashMap<String, Object> rabbitmqExporterRabbitmq = (HashMap<String, Object>)getProperty(rabbitmqExporter,"rabbitmq");
+        rabbitmqExporterRabbitmq.put("user", exporterCredential.getUsername());
+        rabbitmqExporterRabbitmq.put("password", exporterCredential.getPassword());
+        rabbitmqExporterRabbitmq.put("ca_cert", certificateCredential.getCertificateAuthority());
+
 
 
         for (Map.Entry parameter : customParameters.entrySet()) {
