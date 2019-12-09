@@ -95,14 +95,14 @@ instance_groups:
             tag: monitoring
         user_default_tag: policymaker
         admin_users:
-          - username: admin
-            password: admin
-          - username: manager
-            password: manager
-            tag: monitoring
+          - username: root
+            password: root
           - username: broker
             password: broker
-            tag: none
+            tag: administrator
+          - username: exporter
+            password: exporter
+            tag: monitoring
         backup_users:
           - username: backup
             password: rules
