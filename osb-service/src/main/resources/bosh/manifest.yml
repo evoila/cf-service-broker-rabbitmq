@@ -58,7 +58,8 @@ instance_groups:
     rabbitmq:
       server:
         ssl:
-          fail_if_no_peer_cert: true
+          enabled: false
+          fail_if_no_peer_cert: false
           verify: verifiy_none
           handshake_timeout: 5000
         disk_free_limit: 50000000
