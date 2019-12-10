@@ -83,10 +83,6 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
                 DefaultCredentialConstants.EXPORTER_CREDENTIALS);
 
 
-        HashMap<String, Object> exporterProperties = adminUsers.get(2);
-        exporterProperties.put("username", exporterCredential.getUsername());
-        exporterProperties.put("password", exporterCredential.getPassword());
-        exporterProperties.put("tag", "monitoring");
 
 
         List<HashMap<String, Object>> backupUsers = (List<HashMap<String, Object>>) rabbitmqServer.get("backup_users");
@@ -104,6 +100,12 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         userProperties.put("username", userUsernamePasswordCredential.getUsername());
         userProperties.put("password", userUsernamePasswordCredential.getPassword());
 
+
+        HashMap<String, Object> exporterProperties = users.get(1);
+        exporterProperties.put("username", exporterCredential.getUsername());
+        exporterProperties.put("password", exporterCredential.getPassword());
+        exporterProperties.put("tag", "monitoring");
+
         List<HashMap<String, Object>> vhosts = (List<HashMap<String, Object>>) rabbitmqServer.get("vhosts");
         HashMap<String, Object> vhostProperties= vhosts.get(0);
 
@@ -112,6 +114,7 @@ public class RabbitMQDeploymentManager extends DeploymentManager {
         List<String> vhostUsers = (List<String>) vhostProperties.get("users");
         vhostUsers.clear();
         vhostUsers.add(userUsernamePasswordCredential.getUsername());
+        vhostUsers.add(exporterCredential.getUsername());
 
         // set up tsl config
         CertificateCredential certificateCredential = credentialStore.createCertificate(serviceInstance, CredentialConstants.TRANSPORT_SSL,

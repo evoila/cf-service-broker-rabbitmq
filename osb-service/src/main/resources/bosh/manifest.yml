@@ -40,25 +40,24 @@ instance_groups:
   properties:
     rabbitmq_exporter:
       rabbitmq:
-        url: https://localhost:15671
+        url: http://localhost:15671
         user: ((exporter_credentials.username))
         password: ((exporter_credentials.password))
         skip_tls_verify: true
-    blackbox_exporter:
-      config:
-        modules:
-          http_2xx:
-            prober: http
-            http:
-              basic_auth:
-                username: ((exporter_credentials.username))
-                password: ((exporter_credentials.password))
-              tls_config:
-                insecure_skip_verify: true
+ #   blackbox_exporter:
+ #     config:
+ #       modules:
+ #         http_2xx:
+ #           prober: http
+ #           http:
+ #             basic_auth:
+ #               username: ((exporter_credentials.username))
+ #               password: ((exporter_credentials.password))
+ #             tls_config:
+ #               insecure_skip_verify: true
     rabbitmq:
       server:
         ssl:
-          enabled: true
           fail_if_no_peer_cert: true
           verify: verifiy_none
           handshake_timeout: 5000
@@ -100,9 +99,6 @@ instance_groups:
           - username: broker
             password: broker
             tag: administrator
-          - username: exporter
-            password: exporter
-            tag: monitoring
         backup_users:
           - username: backup
             password: rules
