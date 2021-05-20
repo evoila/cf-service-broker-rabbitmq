@@ -3,6 +3,7 @@
  */
 package de.evoila.cf.broker.custom.rabbitmq;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
@@ -46,17 +47,21 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
 	private CredentialStore credentialStore;
 
+	private ObjectMapper objectMapper;
+
     public RabbitMqBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
                                   ServiceInstanceRepository serviceInstanceRepository,
                                   RouteBindingRepository routeBindingRepository,
                                   RabbitMqCustomImplementation rabbitMqCustomImplementation, ExistingEndpointBean existingEndpointBean,
                                   JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository,
-                                  CredentialStore credentialStore) {
+                                  CredentialStore credentialStore,
+                                  ObjectMapper objectMapper) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository,
                 jobRepository, asyncBindingService, platformRepository);
         this.rabbitMqCustomImplementation = rabbitMqCustomImplementation;
         this.existingEndpointBean = existingEndpointBean;
         this.credentialStore = credentialStore;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -69,6 +74,7 @@ public class RabbitMqBindingService extends BindingServiceImpl {
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException,
             PlatformException {
         UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.BROKER_ADMIN);
+        CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
 
         boolean tlsEnabled;
 
@@ -96,11 +102,14 @@ public class RabbitMqBindingService extends BindingServiceImpl {
 
         List<ServerAddress> serverAddresses = null;
         if (plan.getPlatform() == Platform.BOSH && plan.getMetadata() != null) {
-            if (plan.getMetadata().getIngressInstanceGroup() != null && host == null)
-                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
+            serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
                         plan.getMetadata().getIngressInstanceGroup());
-            else if (plan.getMetadata().getIngressInstanceGroup() == null)
-                serverAddresses = serviceInstance.getHosts();
+            if (planParameters.getDns() != null) {
+                serverAddresses = List.of( new ServerAddress(serverAddresses.get(0).getName(),
+                        serviceInstance.getId().replace("-","") + "." + planParameters.getDns(),
+                        serverAddresses.get(0).getPort(),
+                        serverAddresses.get(0).isBackup()));
+            }
         } else if (plan.getPlatform() == Platform.EXISTING_SERVICE && existingEndpointBean != null) {
             serverAddresses = existingEndpointBean.getHosts();
         } else if (host != null)

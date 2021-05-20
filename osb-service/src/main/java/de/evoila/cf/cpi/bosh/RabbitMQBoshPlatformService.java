@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import de.evoila.cf.broker.bean.BoshProperties;
+import de.evoila.cf.broker.custom.rabbitmq.CustomParameters;
 import de.evoila.cf.broker.model.DashboardClient;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.CatalogService;
+import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.broker.custom.rabbitmq.RabbitmqPort;
@@ -20,6 +22,7 @@ import io.bosh.client.vms.Vm;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -39,22 +42,29 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
 
     private CredentialStore credentialStore;
 
+    private ObjectMapper objectMapper;
+
     public RabbitMQBoshPlatformService(PlatformRepository repository, CatalogService catalogService,
-                                ServicePortAvailabilityVerifier availabilityVerifier,
-                                BoshProperties boshProperties, Optional<DashboardClient> dashboardClient,
-                                Environment environment, CredentialStore credentialStore) {
+                                       ServicePortAvailabilityVerifier availabilityVerifier,
+                                       BoshProperties boshProperties, Optional<DashboardClient> dashboardClient,
+                                       Environment environment, CredentialStore credentialStore,
+                                       DeploymentManager deploymentManager,
+                                       ObjectMapper objectMapper) {
         super(repository, catalogService,
               availabilityVerifier,boshProperties,
-              dashboardClient, new RabbitMQDeploymentManager(boshProperties, environment, credentialStore));
+              dashboardClient, deploymentManager);
         this.credentialStore = credentialStore;
         this.mapper = new ObjectMapper(new YAMLFactory());
         this.mapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+        this.objectMapper = objectMapper;
     }
 
     @Override
     protected void updateHosts(ServiceInstance serviceInstance, Plan plan, Deployment deployment) {
+
         List<Vm> vms = super.getVms(serviceInstance);
         serviceInstance.getHosts().clear();
+        CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
 
         Manifest manifest;
         try {
@@ -72,44 +82,6 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
         HashMap<String, Object>  rabbitmqServer = (HashMap<String, Object>) rabbitmq.get("server");
         HashMap<String, Object>  rabbitmqSsl = (HashMap<String, Object>) rabbitmqServer.get("ssl");
 
-        /* to handle dynamically http and tls for the serviceInstance, we need to remember what is the state of the ssl
-          parameter, which tells us if the instance is currently using http or tls for connections. If the parameter is  not set,
-          it means that tls was not activated.
-         */
-        HashMap<String, Object> serviceInstanceRabbitmqParam = new HashMap<>();
-        HashMap<String, Object> serviceInstanceServerParam = new HashMap<>();
-        HashMap<String, Object> serviceInstaceSslParam = new HashMap<>();
-        HashMap<String, Object> serviceInstaceSslEnabledParam = new HashMap<>();
-
-        if (serviceInstance.getParameters().get("rabbitmq") != null) {
-            serviceInstanceRabbitmqParam = (HashMap<String, Object>) serviceInstance.getParameters().get("rabbitmq");
-
-            if (serviceInstanceRabbitmqParam.get("server") != null) {
-                serviceInstanceServerParam = (HashMap<String, Object>) serviceInstanceRabbitmqParam.get("server");
-
-                if (serviceInstanceServerParam.get("ssl") != null) {
-                    serviceInstaceSslParam = (HashMap<String, Object>) serviceInstanceServerParam.get("ssl");
-
-                } else {
-                    serviceInstaceSslEnabledParam.put("enabled", false);
-                    serviceInstaceSslParam.put("ssl", serviceInstaceSslEnabledParam);
-                    serviceInstance.setParameters(serviceInstanceRabbitmqParam);
-
-                }
-            } else {
-                serviceInstaceSslEnabledParam.put("enabled", false);
-                serviceInstaceSslParam.put("ssl", serviceInstaceSslEnabledParam);
-                serviceInstanceServerParam.put("server", serviceInstaceSslParam);
-                serviceInstance.setParameters(serviceInstanceRabbitmqParam);
-            }
-        } else {
-            serviceInstaceSslEnabledParam.put("enabled", false);
-            serviceInstaceSslParam.put("ssl", serviceInstaceSslEnabledParam);
-            serviceInstanceServerParam.put("server", serviceInstaceSslParam);
-            serviceInstanceRabbitmqParam.put("rabbitmq", serviceInstanceServerParam);
-            serviceInstance.setParameters(serviceInstanceRabbitmqParam);
-        }
-
         if (rabbitmqSsl.get("enabled").equals(true)) {
             this.defaultPort = RabbitmqPort.SSL_PORT;
             updateTlsStatus(serviceInstance, true);
@@ -118,7 +90,22 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
             updateTlsStatus(serviceInstance, false);
         }
 
-        vms.forEach(vm -> serviceInstance.getHosts().add(super.toServerAddress(vm, defaultPort)));
+        if(planParameters.getDns() == null) {
+            vms.forEach(vm -> serviceInstance.getHosts().add(super.toServerAddress(vm, defaultPort, plan)));
+        }else{
+            String dns = serviceInstance.getId().replace("-","") + "." + planParameters.getDns();
+            final String backup = ( plan.getMetadata().getBackup() != null )?plan.getMetadata().getBackup().getInstanceGroup():"none ";
+
+            vms.forEach(vm -> {
+                serviceInstance.getHosts().add(new ServerAddress(
+                                vm.getJobName() + vm.getIndex(),
+                                vm.getId() + "." + vm.getJobName() + "." + dns,
+                                defaultPort,
+                                vm.getJobName().contains(backup)
+                        )
+                );
+            });
+        }
     }
 
     @Override
@@ -131,10 +118,21 @@ public class RabbitMQBoshPlatformService extends BoshPlatformService {
     private void updateTlsStatus(ServiceInstance serviceInstance, boolean tlsEnabled) {
 
         HashMap<String, Object> params = (HashMap<String, Object>) serviceInstance.getParameters();
-        HashMap<String, Object> rabbitmq = (HashMap<String, Object>)params.get("rabbitmq");
-        HashMap<String, Object> rabbitmqServer = (HashMap<String, Object>)rabbitmq.get("server");
-
+        Map<String, Object> rabbitmq = (HashMap<String, Object>)params.get("rabbitmq");
+        if (rabbitmq == null){
+            rabbitmq = Map.of("server",new HashMap());
+            params.put("rabbitmq",rabbitmq);
+        }
+        Map<String, Object> rabbitmqServer = (HashMap<String, Object>)rabbitmq.get("server");
+        if (rabbitmqServer == null){
+            rabbitmqServer = Map.of("ssl",new HashMap());
+            rabbitmq.put("server",rabbitmqServer);
+        }
         HashMap<String, Object> rabbitmqServerSsl = (HashMap<String, Object>)rabbitmqServer.get("ssl");
+        if (rabbitmqServerSsl == null){
+            rabbitmqServerSsl = new HashMap<>();
+            rabbitmqServer.put("ssl",rabbitmqServerSsl);
+        }
         rabbitmqServerSsl.put("enabled", tlsEnabled);
     }
 
