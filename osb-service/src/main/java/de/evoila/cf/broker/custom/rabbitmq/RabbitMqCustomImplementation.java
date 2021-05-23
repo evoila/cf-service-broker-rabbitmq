@@ -12,28 +12,17 @@ import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,8 +37,11 @@ public class RabbitMqCustomImplementation {
 
 	private ExistingEndpointBean existingEndpointBean;
 
-	public RabbitMqCustomImplementation(ExistingEndpointBean existingEndpointBean) {
+	private RestTemplate template;
+
+	public RabbitMqCustomImplementation(ExistingEndpointBean existingEndpointBean, RestTemplate template) {
 		this.existingEndpointBean = existingEndpointBean;
+		this.template = template;
 	}
 
 	public RabbitMqService connection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential, boolean tlsEnabled) throws PlatformException {
@@ -134,28 +126,6 @@ public class RabbitMqCustomImplementation {
 			entity = new HttpEntity<>(headers);
 		else
 			entity = new HttpEntity<>(payload, headers);
-
-		RestTemplate template;
-
-		if (tlsEnabled) {
-			SSLContext sslcontext;
-			try {
-				sslcontext = SSLContexts.custom().loadTrustMaterial(null,
-						new TrustSelfSignedStrategy()).build();
-			} catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
-				throw new RuntimeException();
-			}
-
-			SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext,
-					new String[]{"TLSv1"}, null, new NoopHostnameVerifier());
-
-			HttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-			HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpclient);
-
-			template = new RestTemplate(factory);
-		} else {
-			template = new RestTemplate();
-		}
 
 		template.exchange(url, method, entity, String.class);
 

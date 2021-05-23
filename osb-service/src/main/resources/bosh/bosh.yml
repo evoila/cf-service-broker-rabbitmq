@@ -3,11 +3,33 @@ name: osb-rabbitmq
 
 releases:
 - name: osb-bosh-rabbitmq
-  version: latest
+  version: 0+dev.81
 - name: osb-bosh-haproxy
   version: latest
 - name: prometheus
   version: latest
+
+variables:
+- name: erlang_cookie
+  type: password
+- name: server_ca
+  options:
+    common_name: Identity Credentials Intermediate CA
+    is_ca: true
+  type: certificate
+- name: server_cert
+  options:
+    ca: server_ca 
+    common_name: Identity Credentials Intermediate CA
+    is_ca: false
+    extended_key_usage:
+    - server_auth
+  consumes:
+    alternative_name: 
+      from: rabbitmq-address
+      properties: { wildcard: true }
+  type: certificate
+
 
 update:
   canaries: 1
@@ -17,7 +39,7 @@ update:
 
 stemcells:
 - alias: default
-  os: ubuntu-xenial
+  os: ubuntu-bionic
   version: latest
 
 instance_groups:
@@ -33,6 +55,13 @@ instance_groups:
   jobs:
   - name: rabbitmq-server
     release: osb-bosh-rabbitmq
+    custom_provider_definitions:
+     - name: rabbitmq-address
+       type: address
+    provides:
+      rabbitmq-address:
+        as: rabbitmq-address
+        aliases: []
   - name: rabbitmq_exporter
     release: prometheus
   - name: blackbox_exporter
@@ -57,11 +86,15 @@ instance_groups:
  #               insecure_skip_verify: true
     rabbitmq:
       server:
+        cookie: ((erlang_cookie))
         ssl:
-          enabled: false
+          enabled: true
           fail_if_no_peer_cert: false
-          verify: verifiy_none
+          verify: verify_none
           handshake_timeout: 5000
+          cacert: ((server_cert.ca))
+          cert: ((server_cert.certificate))
+          key: ((server_cert.private_key))
         disk_free_limit: 50000000
         fd_limit: 65536
         frame_max: 131072
@@ -95,10 +128,10 @@ instance_groups:
             tag: monitoring
         user_default_tag: policymaker
         admin_users:
-          - username: root
-            password: root
-          - username: broker
-            password: broker
+          - username: ((root_admin.username))
+            password: ((root_admin.password))
+          - username: ((broker_admin.username))
+            password: ((broker_admin.password))
             tag: administrator
         backup_users:
           - username: backup
@@ -129,6 +162,13 @@ instance_groups:
   jobs:
   - name: haproxy
     release: osb-bosh-haproxy
+    custom_provider_definitions:
+     - name: haproxy-address
+       type: address
+    provides:
+      haproxy-address:
+        as: haproxy-address
+        aliases: []
   - name: haproxy_exporter
     release: prometheus
     properties:
